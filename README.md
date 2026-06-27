@@ -54,9 +54,31 @@ optional — every target maps 1:1 to `python -m nexo_os <command>`.
 
 ## Documentation
 
+- [`OPERATING-MODEL.md`](OPERATING-MODEL.md) — how it works; the determinism / HITL boundary.
 - [`nexo_os/data/schema/DATA_MODEL.md`](nexo_os/data/schema/DATA_MODEL.md) — canonical schema, grains, PII flags.
-- [`SECURITY.md`](SECURITY.md) — auth, PII handling, the disabled execution seam.
-- `OPERATING-MODEL.md` — how it works; the determinism / HITL boundary (Phase 9).
+- [`SECURITY.md`](SECURITY.md) — auth, PII handling, the disabled execution seam, audit chain.
+- [`docs/BIGQUERY_CUTOVER.md`](docs/BIGQUERY_CUTOVER.md) — deferred BigQuery cutover runbook.
+
+## Deployment (not deployed in this build)
+
+A [`Dockerfile`](Dockerfile) builds the Spanish dashboard for a future GCP Cloud Run
+deployment (binds `$PORT`, headless Streamlit). Nothing is deployed here.
+
+```bash
+docker build -t nexo-os .
+docker run -p 8080:8080 --env-file .env nexo-os
+```
+
+## Status: production-grade vs deferred
+
+**Production-grade (this build):** deterministic core with golden tests, the ten
+agents, the HITL inbox with hash-chained audit, the grounding wall, the eval gate, and
+the synthetic data path end to end.
+
+**Deferred / out of scope:** the live BigQuery connection (scaffolded, fails closed —
+flip with config + credentials per the cutover runbook) and any outbound execution
+(the execution seam is disabled). Switching to BigQuery requires **no change to agent
+or core code**.
 
 ## Language
 

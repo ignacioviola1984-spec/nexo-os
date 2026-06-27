@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.git/
+.env
+config/users.json
+nexo_os/data/runtime/
+*.duckdb
+htmlcov/
+.coverage
