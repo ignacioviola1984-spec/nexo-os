@@ -1,0 +1,61 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nexo-os"
+version = "2.0.0"
+description = "Nexo Operating Model v2 — deterministic, human-in-the-loop AI co-pilot for a single insurance brokerage."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Proprietary — private, single-tenant" }
+authors = [{ name = "Ignacio Viola" }]
+
+# Versions pinned to what was validated on Python 3.14.6 (2026-06).
+dependencies = [
+    "anthropic==0.112.0",
+    "pydantic==2.13.4",
+    "pydantic-settings==2.14.2",
+    "python-dotenv==1.2.2",
+    "structlog==26.1.0",
+    "duckdb==1.5.4",
+    "pandas==3.0.3",
+    "pyarrow==24.0.0",
+    "streamlit==1.58.0",
+    "streamlit-authenticator==0.4.2",
+    "bcrypt==5.0.0",
+]
+
+[project.optional-dependencies]
+# DEFERRED backend — not installed by default. `pip install -e ".[bigquery]"`.
+bigquery = ["google-cloud-bigquery==3.27.0"]
+dev = ["pytest==9.1.1", "pytest-cov==7.1.0", "ruff>=0.6", "black>=24"]
+
+[project.scripts]
+nexo = "nexo_os.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["nexo_os*"]
+
+[tool.setuptools.package-data]
+nexo_os = ["data/schema/*.md", "data/synthetic/*.md", "i18n/*.json"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "W"]
+ignore = ["E501"]  # line length handled by black
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+[tool.pytest.ini_options]
+testpaths = ["nexo_os/tests"]
+addopts = "-q"
+
+[tool.coverage.run]
+source = ["nexo_os"]
+omit = ["nexo_os/tests/*", "nexo_os/dashboard/*"]

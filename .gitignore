@@ -1,0 +1,41 @@
+# Secrets — never commit
+.env
+*.key
+.streamlit/secrets.toml
+config/users.json
+
+# Runtime / generated data stores (system tables: acciones, agent_runs, audit_log)
+nexo_os/data/runtime/
+*.duckdb.wal
+*.duckdb.tmp/
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.coverage
+htmlcov/
+.ruff_cache/
+.mypy_cache/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# BigQuery credentials (deferred backend)
+gcp-credentials*.json
+service-account*.json
+
+# NOTE: nexo_os/data/synthetic/ IS committed on purpose — it is clearly-labelled
+# SYNTHETIC data with non-real PII (see GROUND_TRUTH.md). The DuckDB binary store
+# itself is regenerable via `python -m nexo_os seed`, so the .duckdb file is ignored;
+# the generator + GROUND_TRUTH.md are the committed source of truth.
+nexo_os/data/synthetic/*.duckdb
