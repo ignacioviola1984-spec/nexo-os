@@ -57,16 +57,6 @@ optional — every target maps 1:1 to `python -m nexo_os <command>`.
 - [`SECURITY.md`](SECURITY.md) — auth, PII handling, the disabled execution seam, audit chain.
 - [`docs/BIGQUERY_CUTOVER.md`](docs/BIGQUERY_CUTOVER.md) — deferred BigQuery cutover runbook.
 
-## Deployment (not deployed in this build)
-
-A [`Dockerfile`](Dockerfile) builds the Spanish dashboard for a future GCP Cloud Run
-deployment (binds `$PORT`, headless Streamlit). Nothing is deployed here.
-
-```bash
-docker build -t nexo-os .
-docker run -p 8080:8080 --env-file .env nexo-os
-```
-
 ## Language
 
 Code, identifiers, comments, commits, docs: **English**. UI strings and all
