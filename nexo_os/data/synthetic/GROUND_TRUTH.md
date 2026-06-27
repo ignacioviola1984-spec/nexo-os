@@ -14,10 +14,10 @@
 |---|---|
 | `clientes` | 353 |
 | `polizas` | 810 |
-| `cuotas` | 5921 |
+| `cuotas` | 5895 |
 | `comisiones` | 812 |
 | `leads` | 212 |
-| `cotizaciones` | 182 |
+| `cotizaciones` | 173 |
 | `siniestros` | 9 |
 | `aseguradoras` | 5 |
 | `productores` | 6 |
@@ -26,8 +26,8 @@
 ## Cartera (in force)
 
 - Vigentes: **802**
-- Prima total: **ARS 374776709.00**
-- Comisión esperada (período actual): **ARS 45709487.00**
+- Prima total: **ARS 375886028.00**
+- Comisión esperada (período actual): **ARS 45866116.91**
 
 ## Morosidad / Cobranza (reconcile on the same overdue universe)
 
@@ -58,23 +58,23 @@
 
 ## Conversión
 
-- Leads ganados: **41**, perdidos: **66** (cerrados: 107).
-- Cotizaciones bound (con póliza): **41** de **177** cerradas.
+- Leads ganados: **42**, perdidos: **54** (cerrados: 96).
+- Cotizaciones bound (con póliza): **42** de **168** cerradas.
 
 ## Pipeline
 
-- Valor abierto (cotizado/presentado): **ARS 30907202.00**.
+- Valor abierto (cotizado/presentado): **ARS 32722300.00**.
 
 ## Rentabilidad por ramo (controlado)
 
-- Ramo `caucion`: prima **ARS 1217692.00**, siniestros pagados **ARS 1035038.20**, loss ratio **0.85**.
+- Ramo `caucion`: prima **ARS 1919742.00**, siniestros pagados **ARS 1631780.70**, loss ratio **0.85**.
 - Ramos no rentables (loss ratio > umbral): **caucion**.
 
 ## Retención (comisión en riesgo)
 
-- Clientes en riesgo (inactividad + póliza vigente): **5**.
-- Comisión en riesgo total: **ARS 351579.20**.
-- Cliente top en riesgo: `CLI-00351`.
+- Clientes en riesgo (inactividad + póliza vigente): **8**.
+- Comisión en riesgo total: **ARS 645433.59**.
+- Cliente top en riesgo: `CLI-00352`.
 
 ## Clientes inactivos sin póliza vigente
 

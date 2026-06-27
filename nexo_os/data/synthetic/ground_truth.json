@@ -1,8 +1,8 @@
 {
   "cartera": {
     "polizas_vigentes": 802,
-    "prima_total_ars": "374776709.00",
-    "comision_esperada_ars": "45709487.00"
+    "prima_total_ars": "375886028.00",
+    "comision_esperada_ars": "45866116.91"
   },
   "morosidad": {
     "buckets": {
@@ -106,23 +106,32 @@
     ],
     "sla_breach_count": 7,
     "quotes_no_presentadas_ids": [
-      "COT-00178",
-      "COT-00179",
-      "COT-00180",
-      "COT-00181",
-      "COT-00182"
+      "COT-00169",
+      "COT-00170",
+      "COT-00171",
+      "COT-00172",
+      "COT-00173"
     ],
     "quotes_no_presentadas_count": 5
   },
   "conversion": {
-    "leads_ganados": 41,
-    "leads_perdidos": 66,
-    "leads_cerrados": 107,
-    "quotes_bound": 41,
-    "quotes_total_cerradas": 177
+    "leads_ganados": 42,
+    "leads_perdidos": 54,
+    "leads_cerrados": 96,
+    "quotes_bound": 42,
+    "quotes_total_cerradas": 168
   },
   "pipeline": {
-    "open_value_ars": "30907202.00"
+    "open_value_ars": "32722300.00",
+    "aging_ids": [
+      "LEAD-00201",
+      "LEAD-00202",
+      "LEAD-00203",
+      "LEAD-00204",
+      "LEAD-00205",
+      "LEAD-00206",
+      "LEAD-00207"
+    ]
   },
   "inactivos_sin_poliza_ids": [
     "CLI-00335",
@@ -137,8 +146,8 @@
   "inactivos_sin_poliza_count": 8,
   "profitability": {
     "ramo": "caucion",
-    "caucion_premium_ars": "1217692.00",
-    "caucion_claims_paid_ars": "1035038.20",
+    "caucion_premium_ars": "1919742.00",
+    "caucion_claims_paid_ars": "1631780.70",
     "caucion_loss_ratio": "0.85",
     "unprofitable_ramos": [
       "caucion"
@@ -146,32 +155,50 @@
   },
   "retention": {
     "at_risk_client_ids": [
+      "CLI-00313",
+      "CLI-00314",
+      "CLI-00315",
       "CLI-00349",
       "CLI-00350",
       "CLI-00351",
       "CLI-00352",
       "CLI-00353"
     ],
-    "at_risk_count": 5,
-    "comision_en_riesgo_ars": "351579.20",
+    "at_risk_count": 8,
+    "inactividad_ids": [
+      "CLI-00349",
+      "CLI-00350",
+      "CLI-00351",
+      "CLI-00352",
+      "CLI-00353"
+    ],
+    "lapse_ids": [
+      "CLI-00313",
+      "CLI-00314",
+      "CLI-00315"
+    ],
+    "comision_en_riesgo_ars": "645433.59",
     "per_client_ars": {
-      "CLI-00349": "15077.00",
-      "CLI-00350": "85711.56",
-      "CLI-00351": "128667.00",
-      "CLI-00352": "34494.24",
-      "CLI-00353": "87629.40"
+      "CLI-00349": "24800.85",
+      "CLI-00350": "36594.36",
+      "CLI-00351": "40902.48",
+      "CLI-00352": "176137.08",
+      "CLI-00353": "159569.34",
+      "CLI-00313": "78185.20",
+      "CLI-00314": "44314.40",
+      "CLI-00315": "84929.88"
     },
-    "top_client_id": "CLI-00351"
+    "top_client_id": "CLI-00352"
   },
   "snapshot_fecha": "2026-06-30",
   "seed": 20260630,
   "counts": {
     "clientes": 353,
     "polizas": 810,
-    "cuotas": 5921,
+    "cuotas": 5895,
     "comisiones": 812,
     "leads": 212,
-    "cotizaciones": 182,
+    "cotizaciones": 173,
     "siniestros": 9,
     "aseguradoras": 5,
     "productores": 6,

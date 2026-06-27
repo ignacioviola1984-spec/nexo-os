@@ -311,7 +311,8 @@ class Builder:
         plan = {"1-30": (5, 5, 30), "31-60": (4, 31, 60), "61-90": (3, 61, 90), "90+": (3, 95, 160)}
         buckets: dict[str, dict] = {}
         ids: list[str] = []
-        clientes_90plus: list[str] = []
+        # lapse (90+) clients are a retention churn signal: capture their commission at risk
+        self._lapse_commission: dict[str, Decimal] = {}
         for label, (count, dlo, dhi) in plan.items():
             b_count, b_ars = 0, q2(0)
             for _ in range(count):
@@ -339,7 +340,7 @@ class Builder:
                 b_ars += monto
                 ids.append(cuo_id)
                 if label == "90+":
-                    clientes_90plus.append(cid)
+                    self._lapse_commission[cid] = q2(pol["prima_ars"] * pol["comision_pct"])
             buckets[label] = {"count": b_count, "ars": b_ars}
         total_ars = sum((b["ars"] for b in buckets.values()), q2(0))
         total_count = sum(b["count"] for b in buckets.values())
@@ -351,7 +352,6 @@ class Builder:
         }
         # cobranza acts on the same overdue universe -> totals reconcile
         self.gt["cobranza"] = {"total_recuperable_ars": total_ars, "items_count": total_count}
-        self._clientes_lapse = clientes_90plus
 
     # --- planted: renewals -----------------------------------------------------
 
@@ -540,7 +540,8 @@ class Builder:
                     aseguradora_id=self.rng.choice(self.aseguradoras),
                     ramo=ramo,
                     prima_cotizada_ars=prima,
-                    fecha_cotizacion=ingreso + timedelta(days=2),
+                    # recent quote date so baseline 'emitida' quotes are never stale
+                    fecha_cotizacion=self.snapshot - timedelta(days=self.rng.randint(0, 8)),
                     estado=q_estado,
                     vigencia_cotizacion=None,
                     poliza_id=bound_pol,
@@ -582,7 +583,9 @@ class Builder:
                 ramo=ramo,
                 productor_id=self.rng.choice(self.productores),
                 estado="cotizado",
-                fecha_ultimo_movimiento=self.snapshot - timedelta(days=self.rng.randint(15, 30)),
+                # lead itself moved recently (not an SLA breach); the QUOTE is the stale
+                # signal -> isolates 'never presented' from the SLA-breach cluster
+                fecha_ultimo_movimiento=self.snapshot - timedelta(days=self.rng.randint(0, 4)),
                 fecha_cierre=None,
                 motivo_perdida=None,
                 cliente_id=None,
@@ -614,7 +617,9 @@ class Builder:
             "quotes_bound": bound,
             "quotes_total_cerradas": quotes_total,
         }
-        self.gt["pipeline"] = {"open_value_ars": open_value}
+        # aging opportunities = open leads with no movement past the aging threshold
+        # (the SLA cluster moved 15-40d ago; baseline/np leads moved recently)
+        self.gt["pipeline"] = {"open_value_ars": open_value, "aging_ids": sla_ids}
 
     # --- planted: inactive clients with no in-force policy --------------------
 
@@ -674,28 +679,38 @@ class Builder:
     # --- planted: retention (commission at risk) ------------------------------
 
     def plant_retention(self) -> None:
-        """At-risk clients: long inactivity AND in-force policy. Commission at risk =
-        sum of current-period expected commission over their vigente policies."""
-        ids: list[str] = []
-        total_at_risk = q2(0)
+        """Revenue-at-risk clients = in-force clients exhibiting a churn signal. Two
+        deterministic signals are implemented (others are extensible): long INACTIVITY
+        (last interaction older than inactivity_days) and LAPSE (a 90+ overdue
+        installment, captured during plant_morosidad). Commission at risk per client =
+        sum of current-period expected commission over their vigente policies.
+
+        The union is recorded exactly so the eval can assert the agent surfaces it.
+        """
         per_client: dict[str, str] = {}
+        # signal 1: inactivity cluster (fresh clients with a stale interaction)
+        inactividad_ids: list[str] = []
         for _ in range(5):
             cid = self._id("CLI")
             self._new_cliente(cid, estado="activo")
-            # stale interaction -> inactivity churn signal (> inactivity_days)
             self._interaccion("cliente", cid, dias_atras=self.rng.randint(200, 400))
             ramo = self.rng.weighted(RAMO_MIX)
             pol = self._new_poliza(cid, ramo, fin_offset_days=self.rng.randint(120, 360))
             self._installments(pol)
             self._register_inforce(pol)
-            at_risk = q2(pol["prima_ars"] * pol["comision_pct"])
-            ids.append(cid)
-            per_client[cid] = str(at_risk)
-            total_at_risk += at_risk
+            per_client[cid] = str(q2(pol["prima_ars"] * pol["comision_pct"]))
+            inactividad_ids.append(cid)
+        # signal 2: lapse cluster (90+ overdue), captured in plant_morosidad
+        lapse_ids = sorted(self._lapse_commission)
+        for cid, com in self._lapse_commission.items():
+            per_client[cid] = str(com)
+        total_at_risk = sum((Decimal(v) for v in per_client.values()), q2(0))
         top_client = max(per_client, key=lambda k: Decimal(per_client[k]))
         self.gt["retention"] = {
-            "at_risk_client_ids": ids,
-            "at_risk_count": len(ids),
+            "at_risk_client_ids": sorted(per_client),
+            "at_risk_count": len(per_client),
+            "inactividad_ids": inactividad_ids,
+            "lapse_ids": lapse_ids,
             "comision_en_riesgo_ars": total_at_risk,
             "per_client_ars": per_client,
             "top_client_id": top_client,
