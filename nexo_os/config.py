@@ -111,6 +111,8 @@ class Settings(BaseSettings):
     anthropic_api_key: str | None = Field(default=None, alias="ANTHROPIC_API_KEY")
     model: str = Field(default="claude-sonnet-4-6", alias="NEXO_MODEL")
     model_max_tokens: int = Field(default=700, alias="NEXO_MODEL_MAX_TOKENS")
+    # cap on model-narrated actions per run (rest get deterministic grounded facts)
+    narrate_model_cap: int = Field(default=40, alias="NEXO_NARRATE_MODEL_CAP")
 
     # --- snapshot date override (else the synthetic dataset's documented date) ---
     snapshot_fecha_override: date | None = Field(default=None, alias="NEXO_SNAPSHOT_FECHA")

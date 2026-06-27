@@ -59,6 +59,31 @@ def _seed_minimal(path: Path) -> None:
             None,
         ],
     )
+    # current-period commission so cartera<->comisiones reconciliation is clean
+    con.execute(
+        "INSERT INTO comisiones (comision_id, poliza_id, aseguradora_id, periodo, "
+        "base_comisionable_ars, comision_pct, comision_esperada_ars, comision_liquidada_ars, "
+        "fecha_liquidacion, estado, diferencia_ars) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+        [
+            "COM1",
+            "POL1",
+            "ASEG-01",
+            "2026-06",
+            Decimal("100000.00"),
+            Decimal("0.120000"),
+            Decimal("12000.00"),
+            Decimal("12000.00"),
+            date(2026, 6, 20),
+            "liquidada",
+            Decimal("0.00"),
+        ],
+    )
+    # recent interaction so retention does not flag the client on inactivity
+    con.execute(
+        "INSERT INTO interacciones (interaccion_id, entidad_tipo, entidad_id, fecha, tipo, resumen) "
+        "VALUES (?,?,?,?,?,?)",
+        ["INT1", "cliente", "C1", date(2026, 6, 1), "llamado", "ok"],
+    )
     con.close()
 
 
