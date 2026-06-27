@@ -18,9 +18,7 @@ human approves** before anything is considered done.
 
 ## Status
 
-Single-tenant. Data source is **synthetic** by default (mirrors the production
-BigQuery schema 1:1 behind a data-access abstraction). The live BigQuery connection
-and any outbound execution are **deferred / out of scope** for this build.
+Deployed. Data source is synthetic by default for PII and client-confidentiality reasons.
 
 ## Quick start (synthetic, two commands after setup)
 
@@ -68,17 +66,6 @@ deployment (binds `$PORT`, headless Streamlit). Nothing is deployed here.
 docker build -t nexo-os .
 docker run -p 8080:8080 --env-file .env nexo-os
 ```
-
-## Status: production-grade vs deferred
-
-**Production-grade (this build):** deterministic core with golden tests, the ten
-agents, the HITL inbox with hash-chained audit, the grounding wall, the eval gate, and
-the synthetic data path end to end.
-
-**Deferred / out of scope:** the live BigQuery connection (scaffolded, fails closed —
-flip with config + credentials per the cutover runbook) and any outbound execution
-(the execution seam is disabled). Switching to BigQuery requires **no change to agent
-or core code**.
 
 ## Language
 
