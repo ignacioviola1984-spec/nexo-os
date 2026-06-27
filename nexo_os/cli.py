@@ -67,7 +67,7 @@ def _cmd_lint(args: argparse.Namespace) -> int:
 
 
 def _cmd_bq_validate(args: argparse.Namespace) -> int:
-    """DEFERRED: validate a live BigQuery dataset against the canonical DDL."""
+    """Validate a live BigQuery dataset against the canonical DDL."""
     from nexo_os.data.bq_validate import validate
 
     return validate()
@@ -85,7 +85,7 @@ def build_parser() -> argparse.ArgumentParser:
     t.add_argument("extra", nargs="*", help="Extra args passed to pytest.")
     sub.add_parser("eval", help="Run the eval/guardrail harness (exits non-zero on failure).")
     sub.add_parser("lint", help="Run ruff + black checks.")
-    sub.add_parser("bq-validate", help="DEFERRED: validate live BigQuery schema vs DDL.")
+    sub.add_parser("bq-validate", help="Validate a live BigQuery dataset vs the canonical DDL.")
     return p
 
 

@@ -1,4 +1,4 @@
-# Nexo dashboard image (for a future GCP Cloud Run deployment — NOT deployed here).
+# Nexo dashboard image (GCP Cloud Run or any container host).
 # Build:  docker build -t nexo-os .
 # Run:    docker run -p 8080:8080 --env-file .env nexo-os
 FROM python:3.12-slim

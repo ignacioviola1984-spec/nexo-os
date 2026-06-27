@@ -30,7 +30,7 @@ Thumbs.db
 .idea/
 .vscode/
 
-# BigQuery credentials (deferred backend)
+# BigQuery credentials
 gcp-credentials*.json
 service-account*.json
 

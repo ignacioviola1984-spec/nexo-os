@@ -39,7 +39,7 @@ Everything below serves these three.
 | Layer | Module | Role |
 |---|---|---|
 | Config | `config.py` | settings + all tunable thresholds (no magic numbers in agents) |
-| Data access | `data/repository.py`, `data/synthetic.py`, `data/bigquery.py`, `data/factory.py` | one typed interface; synthetic now, BigQuery deferred |
+| Data access | `data/repository.py`, `data/synthetic.py`, `data/bigquery.py`, `data/factory.py` | one typed interface; synthetic by default, BigQuery configurable |
 | Schema | `data/schema_def.py` | single source → DDL (both dialects) + PII registry |
 | Core | `core/*` | deterministic metric library |
 | State | `state.py` | shared, memoized snapshot + results |
@@ -77,8 +77,13 @@ truth (`data/synthetic/GROUND_TRUTH.md` + `ground_truth.json`) via an accumulato
 independent of `core`. The golden tests and eval suite assert that core and the agents
 reproduce that ground truth exactly — so a bug on either side is caught.
 
-## What is deferred / out of scope (this build)
+## Configuration & boundaries
 
-- Live BigQuery connection (scaffolded, fails closed; see `BIGQUERY_CUTOVER.md`).
-- Any outbound execution (the execution seam is disabled).
-- Multi-tenant features, public sign-up, billing.
+- **Data source is configurable** (`synthetic | bigquery`). Synthetic is the default,
+  chosen for PII and client-confidentiality reasons; BigQuery is the production source,
+  selected with config + credentials (see `BIGQUERY_CUTOVER.md`) and fails closed if
+  selected without them.
+- **Outbound execution is human-driven by design.** Approvals are recorded; the
+  execution adapter performs no external side effect (no email/WhatsApp/SMS, no
+  AMS/insurer write-back) — a deliberate control for a system that touches money.
+- **Single-tenant by design** (no multi-tenant, public sign-up, or billing).

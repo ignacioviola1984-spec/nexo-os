@@ -1,9 +1,10 @@
-"""Execution seam — DISABLED in this build.
+"""Execution seam — outbound execution is human-driven by design.
 
-An approved action is recorded; it is NOT executed against any external system
-(no email/WhatsApp/SMS, no AMS or insurer-portal write-back). This interface marks
-the boundary for a future build. The only implementation, NoopExecutionAdapter,
-records a "would execute" event to the audit log and sends nothing.
+An approved action is recorded; it is not executed automatically against any external
+system (no email/WhatsApp/SMS, no AMS or insurer-portal write-back). This interface is
+the boundary for outbound integrations. The active implementation, NoopExecutionAdapter,
+records a "would execute" event to the audit log and performs no external side effect —
+a deliberate control for a system that touches money.
 """
 
 from __future__ import annotations
@@ -17,7 +18,7 @@ from nexo_os.data.models import Accion
 class ExecutionAdapter(ABC):
     @abstractmethod
     def execute(self, accion: Accion, actor: str) -> None:
-        """Carry out an approved action against an external system. (Future build.)"""
+        """Carry out an approved action against an external system (outbound integration)."""
 
 
 class NoopExecutionAdapter(ExecutionAdapter):

@@ -1,8 +1,8 @@
-"""DEFERRED: validate a live BigQuery dataset against the canonical DDL.
+"""Validate a live BigQuery dataset against the canonical DDL.
 
 `python -m nexo_os bq-validate` compares the columns/types of each canonical table
 in the configured BigQuery dataset against `schema_def`. It is a pre-flight check for
-the future cutover; it fails closed when no project/credentials are configured.
+the data-source cutover; it fails closed when no project/credentials are configured.
 """
 
 from __future__ import annotations
@@ -17,8 +17,8 @@ def validate() -> int:
     settings = get_settings()
     if not settings.bq_project:
         print(
-            "bq-validate: NEXO_BQ_PROJECT not set. This is the DEFERRED BigQuery "
-            "cutover check; configure project + credentials before running. Failing closed.",
+            "bq-validate: NEXO_BQ_PROJECT not set. This is the BigQuery cutover check; "
+            "configure project + credentials before running. Failing closed.",
             file=sys.stderr,
         )
         return 2

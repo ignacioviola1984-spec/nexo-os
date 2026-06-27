@@ -1,15 +1,16 @@
-"""BigQueryRepository — the DEFERRED production backend.
+"""BigQueryRepository — the production data source.
 
-This is real and reviewable: it implements the same NexoRepository interface against
-BigQuery using the canonical table names and the same SQL semantics as the synthetic
-backend. It is NOT wired live in this build:
+Implements the same NexoRepository interface against BigQuery using the canonical
+table names and the same SQL semantics as the synthetic backend. Synthetic is the
+default (chosen for PII and client-confidentiality reasons); BigQuery is selected via
+configuration:
 
-  * It is unreachable unless NEXO_DATA_SOURCE=bigquery.
+  * It is selected with NEXO_DATA_SOURCE=bigquery.
   * If selected without the google-cloud-bigquery library, a project, and credentials,
     it FAILS CLOSED with a clear message. It never fabricates or stubs results.
 
-To go live later: `pip install -e ".[bigquery]"`, set NEXO_BQ_PROJECT / NEXO_BQ_DATASET
-/ NEXO_BQ_CREDENTIALS_PATH, run `python -m nexo_os bq-validate`, then flip
+To activate: `pip install -e ".[bigquery]"`, set NEXO_BQ_PROJECT / NEXO_BQ_DATASET
+/ NEXO_BQ_CREDENTIALS_PATH, run `python -m nexo_os bq-validate`, then set
 NEXO_DATA_SOURCE=bigquery. No agent or core code changes.
 """
 

@@ -8,7 +8,7 @@ the model, and the controls around it.
 
 | Data | Where it lives | Sensitivity |
 |---|---|---|
-| Domain data (clients, policies, installments, commissions, leads, quotes, claims) | **Synthetic** in this build: local DuckDB (`nexo_os/data/synthetic/nexo.duckdb`). Production: BigQuery (deferred). | PII in `clientes`/`leads` (see DATA_MODEL.md) |
+| Domain data (clients, policies, installments, commissions, leads, quotes, claims) | **Synthetic** by default: local DuckDB (`nexo_os/data/synthetic/nexo.duckdb`). Production data source: BigQuery (configurable). | PII in `clientes`/`leads` (see DATA_MODEL.md) |
 | System data (`acciones`, `agent_runs`, `audit_log`) | Local DuckDB runtime store (`nexo_os/data/runtime/`, gitignored). Production: BigQuery. | Identifiers + decisions; no full PII |
 | User credentials | `config/users.json` (gitignored), bcrypt-hashed | Secret |
 | Secrets (API key, BQ creds, cookie key) | `.env` (gitignored) / environment | Secret |
@@ -50,11 +50,12 @@ non-real PII (reserved `20-99xxxxxx-0` documents, `@example.com` emails, fake na
 - `verify_chain` confirms integrity; the Auditoría dashboard view shows it live.
 - Audit detail payloads carry identifiers only — never full PII.
 
-## Execution seam (disabled)
-- `security/execution.py` defines `ExecutionAdapter`; the only implementation,
-  `NoopExecutionAdapter`, records a "would execute" event to the audit log and sends
-  nothing. Approving an action in this build records the decision and executes nothing
-  outbound (no email/WhatsApp/SMS, no AMS/insurer write-back).
+## Execution seam (human-driven by design)
+- `security/execution.py` defines `ExecutionAdapter`; the active implementation,
+  `NoopExecutionAdapter`, records a "would execute" event to the audit log and performs
+  no external side effect. Approving an action records the decision and executes nothing
+  outbound (no email/WhatsApp/SMS, no AMS/insurer write-back) — a deliberate control for
+  a system that touches money.
 
 ## Fail-closed posture
 - Missing data, a failed reconciliation, a low-confidence inference, or model prose

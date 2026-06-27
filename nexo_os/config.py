@@ -144,7 +144,7 @@ class Settings(BaseSettings):
     admin_password: str | None = Field(default=None, alias="NEXO_ADMIN_PASSWORD")
     admin_name: str = Field(default="Administrador", alias="NEXO_ADMIN_NAME")
 
-    # --- BigQuery (deferred backend) ---
+    # --- BigQuery backend (optional; default source is synthetic) ---
     bq_project: str | None = Field(default=None, alias="NEXO_BQ_PROJECT")
     bq_dataset: str = Field(default="nexo", alias="NEXO_BQ_DATASET")
     bq_credentials_path: Path | None = Field(default=None, alias="NEXO_BQ_CREDENTIALS_PATH")

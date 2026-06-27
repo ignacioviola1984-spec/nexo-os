@@ -12,7 +12,7 @@ human approves** before anything is considered done.
    figure. It routes, prioritizes, and writes Spanish prose. If a number cannot be
    computed, the system says so — it never invents one.
 2. **Human-in-the-loop at every action.** Agents propose; a person approves.
-   Approvals are recorded immutably. No outbound execution in this build.
+   Approvals are recorded immutably. Outbound execution is human-driven by design.
 3. **It fails closed.** Missing data, a failed check, or low confidence → flag and
    stop, never guess and proceed.
 
@@ -48,14 +48,14 @@ optional — every target maps 1:1 to `python -m nexo_os <command>`.
 | `test` | Run pytest |
 | `eval` | Run the eval/guardrail harness (exits non-zero on failure) |
 | `lint` | ruff + black checks |
-| `bq-validate` | DEFERRED: validate a live BigQuery dataset vs the canonical DDL |
+| `bq-validate` | Validate a live BigQuery dataset vs the canonical DDL |
 
 ## Documentation
 
 - [`OPERATING-MODEL.md`](OPERATING-MODEL.md) — how it works; the determinism / HITL boundary.
 - [`nexo_os/data/schema/DATA_MODEL.md`](nexo_os/data/schema/DATA_MODEL.md) — canonical schema, grains, PII flags.
 - [`SECURITY.md`](SECURITY.md) — auth, PII handling, the disabled execution seam, audit chain.
-- [`docs/BIGQUERY_CUTOVER.md`](docs/BIGQUERY_CUTOVER.md) — deferred BigQuery cutover runbook.
+- [`docs/BIGQUERY_CUTOVER.md`](docs/BIGQUERY_CUTOVER.md) — BigQuery cutover runbook.
 
 ## Language
 

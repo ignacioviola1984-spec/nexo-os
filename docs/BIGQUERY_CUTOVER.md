@@ -1,9 +1,9 @@
-# BigQuery cutover runbook (deferred)
+# BigQuery cutover runbook
 
-Switching Nexo from synthetic data to the production BigQuery source is **config +
-credentials against the documented schema — no change to agent or core code**. This is
-deliberately deferred in this build; the BigQuery backend is scaffolded and fails
-closed until configured.
+Synthetic is the default data source, chosen for PII and client-confidentiality
+reasons. Switching Nexo to the production BigQuery source is **config + credentials
+against the documented schema — no change to agent or core code**. The BigQuery backend
+fails closed until configured.
 
 ## Preconditions
 - A BigQuery dataset whose tables match the canonical schema exactly (same names,

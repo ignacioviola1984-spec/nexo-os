@@ -23,7 +23,7 @@ class CarteraResult:
     mix_por_aseguradora: dict[str, dict]
     hhi_aseguradora: Decimal | None
     hhi_cliente: Decimal | None
-    # growth requires prior snapshots, which this build does not retain -> None
+    # growth requires prior-snapshot history; None when unavailable (fail closed)
     crecimiento_mom: Decimal | None
     crecimiento_yoy: Decimal | None
     hallazgos: list[Hallazgo] = field(default_factory=list)
