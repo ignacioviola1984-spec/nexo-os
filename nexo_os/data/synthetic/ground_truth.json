@@ -1,0 +1,180 @@
+{
+  "cartera": {
+    "polizas_vigentes": 802,
+    "prima_total_ars": "374776709.00",
+    "comision_esperada_ars": "45709487.00"
+  },
+  "morosidad": {
+    "buckets": {
+      "1-30": {
+        "count": 5,
+        "ars": "743745.00"
+      },
+      "31-60": {
+        "count": 4,
+        "ars": "431969.00"
+      },
+      "61-90": {
+        "count": 3,
+        "ars": "432563.00"
+      },
+      "90+": {
+        "count": 3,
+        "ars": "163903.00"
+      }
+    },
+    "total_vencido_ars": "1772180.00",
+    "total_count": 15,
+    "cuota_ids": [
+      "CUO-05675",
+      "CUO-05676",
+      "CUO-05677",
+      "CUO-05678",
+      "CUO-05679",
+      "CUO-05680",
+      "CUO-05681",
+      "CUO-05682",
+      "CUO-05683",
+      "CUO-05684",
+      "CUO-05685",
+      "CUO-05686",
+      "CUO-05687",
+      "CUO-05688",
+      "CUO-05689"
+    ]
+  },
+  "cobranza": {
+    "total_recuperable_ars": "1772180.00",
+    "items_count": 15
+  },
+  "renewals": {
+    "expira_30_ids": [
+      "POL-00773",
+      "POL-00774",
+      "POL-00775",
+      "POL-00776"
+    ],
+    "expira_60_ids": [
+      "POL-00777",
+      "POL-00778",
+      "POL-00779"
+    ],
+    "expira_90_ids": [
+      "POL-00780",
+      "POL-00781"
+    ],
+    "expira_30_count": 4,
+    "expira_60_count": 3,
+    "expira_90_count": 2,
+    "expira_total_90d_count": 9,
+    "prima_en_riesgo_90d_ars": "3988781.00",
+    "at_risk_ids": [
+      "POL-00773",
+      "POL-00777",
+      "POL-00780"
+    ],
+    "at_risk_prima_ars": "1596796.00"
+  },
+  "comisiones": {
+    "discrepancia_ids": [
+      "COM-00783",
+      "COM-00785",
+      "COM-00787",
+      "COM-00789",
+      "COM-00791",
+      "COM-00793"
+    ],
+    "total_diferencia_ars": "106969.06",
+    "receivable_aged_ids": [
+      "COM-00795",
+      "COM-00797",
+      "COM-00799",
+      "COM-00801"
+    ],
+    "receivable_aged_ars": "186999.56",
+    "aged_period": "2026-04"
+  },
+  "leads_control": {
+    "sla_breach_ids": [
+      "LEAD-00201",
+      "LEAD-00202",
+      "LEAD-00203",
+      "LEAD-00204",
+      "LEAD-00205",
+      "LEAD-00206",
+      "LEAD-00207"
+    ],
+    "sla_breach_count": 7,
+    "quotes_no_presentadas_ids": [
+      "COT-00178",
+      "COT-00179",
+      "COT-00180",
+      "COT-00181",
+      "COT-00182"
+    ],
+    "quotes_no_presentadas_count": 5
+  },
+  "conversion": {
+    "leads_ganados": 41,
+    "leads_perdidos": 66,
+    "leads_cerrados": 107,
+    "quotes_bound": 41,
+    "quotes_total_cerradas": 177
+  },
+  "pipeline": {
+    "open_value_ars": "30907202.00"
+  },
+  "inactivos_sin_poliza_ids": [
+    "CLI-00335",
+    "CLI-00336",
+    "CLI-00337",
+    "CLI-00338",
+    "CLI-00339",
+    "CLI-00340",
+    "CLI-00341",
+    "CLI-00342"
+  ],
+  "inactivos_sin_poliza_count": 8,
+  "profitability": {
+    "ramo": "caucion",
+    "caucion_premium_ars": "1217692.00",
+    "caucion_claims_paid_ars": "1035038.20",
+    "caucion_loss_ratio": "0.85",
+    "unprofitable_ramos": [
+      "caucion"
+    ]
+  },
+  "retention": {
+    "at_risk_client_ids": [
+      "CLI-00349",
+      "CLI-00350",
+      "CLI-00351",
+      "CLI-00352",
+      "CLI-00353"
+    ],
+    "at_risk_count": 5,
+    "comision_en_riesgo_ars": "351579.20",
+    "per_client_ars": {
+      "CLI-00349": "15077.00",
+      "CLI-00350": "85711.56",
+      "CLI-00351": "128667.00",
+      "CLI-00352": "34494.24",
+      "CLI-00353": "87629.40"
+    },
+    "top_client_id": "CLI-00351"
+  },
+  "snapshot_fecha": "2026-06-30",
+  "seed": 20260630,
+  "counts": {
+    "clientes": 353,
+    "polizas": 810,
+    "cuotas": 5921,
+    "comisiones": 812,
+    "leads": 212,
+    "cotizaciones": 182,
+    "siniestros": 9,
+    "aseguradoras": 5,
+    "productores": 6,
+    "interacciones": 345
+  }
+}
