@@ -5,6 +5,8 @@ Ten specialist agents read the broker's data, compute the state of the business
 **deterministically**, surface what needs attention, and **propose actions that a
 human approves** before anything is considered done.
 
+## Nexo OS Operating Model
+
 ![Nexo OS Operating Model](docs/nexo-os-operating-model.png)
 
 ## Three non-negotiables
