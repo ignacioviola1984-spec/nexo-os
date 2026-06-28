@@ -18,7 +18,7 @@ human approves** before anything is considered done.
 
 ## Status
 
-Deployed. Data source is synthetic by default for PII and client-confidentiality reasons.
+Deployed. Data source in this repo is synthetic by default for PII and client-confidentiality reasons.
 
 ## Quick start (synthetic, two commands after setup)
 
