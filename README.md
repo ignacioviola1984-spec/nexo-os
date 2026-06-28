@@ -1,4 +1,4 @@
-# Nexo Operating Model v2
+# Nexo Operating Model
 
 Production analytics-and-action system for a single Argentine insurance brokerage.
 Ten specialist agents read the broker's data, compute the state of the business
