@@ -21,6 +21,7 @@ human approves** before anything is considered done.
 ## Status
 
 Deployed. Data source in this repo is synthetic by default for PII and client-confidentiality reasons.
+This is the sanitized public version of the deployed architecture.
 
 ## Quick start (synthetic, two commands after setup)
 
