@@ -47,6 +47,11 @@ def _authenticate():
             "NEXO_ADMIN_PASSWORD definido en `.env`."
         )
         st.stop()
+    if settings.demo_mode:
+        st.info(
+            f"Demo público (datos sintéticos). Ingresá con usuario "
+            f"`{settings.admin_username}` y contraseña `{settings.admin_password}`."
+        )
     authenticator = stauth.Authenticate(
         creds,
         settings.auth_cookie_name,

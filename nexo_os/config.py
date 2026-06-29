@@ -144,6 +144,9 @@ class Settings(BaseSettings):
     admin_password: str | None = Field(default=None, alias="NEXO_ADMIN_PASSWORD")
     admin_name: str = Field(default="Administrador", alias="NEXO_ADMIN_NAME")
 
+    # --- public demo (Streamlit Cloud): auto-seed + auto-bootstrap + show creds ---
+    demo_mode: bool = Field(default=False, alias="NEXO_DEMO_MODE")
+
     # --- BigQuery backend (optional; default source is synthetic) ---
     bq_project: str | None = Field(default=None, alias="NEXO_BQ_PROJECT")
     bq_dataset: str = Field(default="nexo", alias="NEXO_BQ_DATASET")

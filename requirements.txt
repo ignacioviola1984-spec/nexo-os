@@ -1,0 +1,13 @@
+# Runtime dependencies for the Streamlit Community Cloud demo (mirrors pyproject).
+# Pinned to versions validated on Python 3.12/3.14.
+anthropic==0.112.0
+pydantic==2.13.4
+pydantic-settings==2.14.2
+python-dotenv==1.2.2
+structlog==26.1.0
+duckdb==1.5.4
+pandas==3.0.3
+pyarrow==24.0.0
+streamlit==1.58.0
+streamlit-authenticator==0.4.2
+bcrypt==5.0.0
