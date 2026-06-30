@@ -16,6 +16,7 @@ from nexo_os.agents.specialists import all_agents
 from nexo_os.analysis import analyze_agent, executive_summary
 from nexo_os.audit import AuditWriter, verify_chain
 from nexo_os.config import get_settings
+from nexo_os.dashboard import portfolio
 from nexo_os.data.factory import get_repository
 from nexo_os.data.models import AccionEstado, Prioridad
 from nexo_os.i18n import AGENTES, NAV, SIN_DATOS, fmt_ars, fmt_pct
@@ -278,22 +279,30 @@ def main() -> None:
                 ctx = run_cycle(repo=repo)
             st.success(f"{len(ctx.acciones)} acciones propuestas.")
         st.divider()
+        # CV/portfolio landing pages, only on the public demo.
+        portfolio_options = ["Proyecto", "Sobre mí"] if settings.demo_mode else []
         nav_options = (
-            [NAV["overview"]]
+            portfolio_options
+            + [NAV["overview"]]
             + [AGENTES[a] for a in AGENTES]
             + [
                 NAV["inbox"],
                 NAV["audit"],
             ]
         )
-        if role == user_store.ROLE_ADMIN:
+        # User management is a production-only admin view (hidden in the public demo).
+        if role == user_store.ROLE_ADMIN and not settings.demo_mode:
             nav_options.append("Usuarios")
         choice = st.radio("Vista", nav_options, label_visibility="collapsed")
 
     results = _compute_all(repo)
     agent_by_name = {AGENTES[a]: a for a in AGENTES}
 
-    if choice == NAV["overview"]:
+    if choice == "Proyecto":
+        portfolio.render_proyecto(settings, repo)
+    elif choice == "Sobre mí":
+        portfolio.render_perfil(settings, repo)
+    elif choice == NAV["overview"]:
         _view_overview(repo, results)
     elif choice in agent_by_name:
         _view_agent(repo, results, agent_by_name[choice])
