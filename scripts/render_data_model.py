@@ -13,8 +13,8 @@ HEADER = """# Nexo canonical data model
 
 This file is the single source of truth a future engineer reads before touching
 BigQuery. It is kept in sync with code: the tables below are generated from
-`nexo_os/data/schema_def.py`, which also renders the canonical DDL
-(`ddl_bigquery.sql`) and the DuckDB DDL used by the synthetic store, and drives the
+`nexo_os/data/schema_def.py`, which also renders the canonical DDL (`ddl_bigquery.sql`,
+`ddl_sqlite.sql`) and the DuckDB DDL used by the synthetic store, and drives the
 PII redaction registry. **Edit `schema_def.py`, then re-run `scripts/render_ddl.py`
 and `scripts/render_data_model.py`.**
 
@@ -24,7 +24,9 @@ and `scripts/render_data_model.py`.**
   BigQuery tables match it (same table names, columns, types, grain).
 - **Money is exact.** ARS amounts are `NUMERIC` (BigQuery) / `DECIMAL(20,2)`
   (DuckDB), never float. Commission fractions are `NUMERIC` / `DECIMAL(8,6)` and are
-  decimal fractions (`0.15` = 15%).
+  decimal fractions (`0.15` = 15%). On the Turso/libSQL backend, where SQLite has no
+  exact NUMERIC, money is stored as `TEXT` (the Decimal's string form) and parsed back
+  to Decimal on read — never `REAL` (see `docs/TURSO.md`).
 - **Derived fields are not stored.** `cuotas.dias_mora` and `cuotas.bucket_mora`
   (0 / 1-30 / 31-60 / 61-90 / 90+) are computed at read-time relative to the run
   snapshot date (see `core.morosidad`), so aging never disagrees with the snapshot.

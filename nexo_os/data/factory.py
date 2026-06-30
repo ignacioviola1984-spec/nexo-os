@@ -5,6 +5,10 @@ NexoRepository interface.
 Multi-tenancy is per-tenant data isolation: the active tenant (NEXO_TENANT_ID, or
 the `tenant_id` argument) picks an isolated store / dataset / GCS prefix. The
 "default" tenant keeps the original paths, so single-tenant behavior is unchanged.
+
+When NEXO_SYSTEM_STORE=turso and the domain source is not already Turso, the domain
+backend is wrapped in a CompositeRepository whose system tables live in hosted Turso
+(the hybrid mode) — so approvals and the audit log persist across restarts.
 """
 
 from __future__ import annotations
@@ -12,7 +16,7 @@ from __future__ import annotations
 from datetime import date
 from pathlib import Path
 
-from nexo_os.config import DataSource, Settings, get_settings
+from nexo_os.config import DataSource, Settings, SystemStore, get_settings
 from nexo_os.data.repository import NexoRepository
 
 DEFAULT_TENANT = "default"
@@ -42,14 +46,11 @@ def tenant_gcs_prefix(settings: Settings, tenant_id: str) -> str:
     return f"{base}/tenants/{tenant_id}/"
 
 
-def get_repository(
-    snapshot_fecha: date | None = None, tenant_id: str | None = None
+def _build_domain(
+    settings: Settings, snapshot_fecha: date | None, tenant_id: str
 ) -> NexoRepository:
-    """Return the configured repository for the active tenant. Defaults to
-    synthetic; BigQuery/GCS fail closed if selected without project/credentials."""
-    settings = get_settings()
-    tenant_id = tenant_id or settings.tenant_id
-
+    """The backend that serves domain reads (and, by default, the system tables too).
+    BigQuery / GCS / Turso are opt-in and fail closed without their connection settings."""
     if settings.data_source is DataSource.bigquery:
         from nexo_os.data.bigquery import BigQueryRepository
 
@@ -64,9 +65,35 @@ def get_repository(
             snapshot_fecha=snapshot_fecha, prefix=tenant_gcs_prefix(settings, tenant_id)
         )
 
+    if settings.data_source is DataSource.turso:
+        from nexo_os.data.turso import TursoRepository
+
+        return TursoRepository(snapshot_fecha=snapshot_fecha)
+
     from nexo_os.data.synthetic import SyntheticRepository
 
     syn, rt = tenant_synthetic_paths(settings, tenant_id)
     return SyntheticRepository(
         synthetic_db_path=syn, runtime_db_path=rt, snapshot_fecha=snapshot_fecha
     )
+
+
+def get_repository(
+    snapshot_fecha: date | None = None, tenant_id: str | None = None
+) -> NexoRepository:
+    """Return the configured repository for the active tenant. Defaults to synthetic;
+    BigQuery/GCS/Turso fail closed if selected without their settings. With
+    NEXO_SYSTEM_STORE=turso (and a non-Turso domain), the system tables are routed to
+    hosted Turso via a CompositeRepository."""
+    settings = get_settings()
+    tenant_id = tenant_id or settings.tenant_id
+    domain = _build_domain(settings, snapshot_fecha, tenant_id)
+
+    if settings.system_store is SystemStore.turso and settings.data_source is not DataSource.turso:
+        from nexo_os.data.composite import CompositeRepository
+        from nexo_os.data.turso import TursoRepository
+
+        system = TursoRepository(snapshot_fecha=snapshot_fecha)
+        return CompositeRepository(domain=domain, system=system)
+
+    return domain

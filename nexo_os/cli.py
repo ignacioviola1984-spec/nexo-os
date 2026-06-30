@@ -73,6 +73,15 @@ def _cmd_bq_validate(args: argparse.Namespace) -> int:
     return validate()
 
 
+def _cmd_turso_seed(args: argparse.Namespace) -> int:
+    """Load the synthetic dataset into the configured Turso/libSQL database."""
+    from nexo_os.data.turso_seed import seed_turso
+
+    counts = seed_turso()
+    print("Seeded Turso:", ", ".join(f"{k}={v}" for k, v in counts.items()))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="nexo", description="Nexo Operating Model v2 task runner.")
     sub = p.add_subparsers(dest="command", required=True)
@@ -86,6 +95,7 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("eval", help="Run the eval/guardrail harness (exits non-zero on failure).")
     sub.add_parser("lint", help="Run ruff + black checks.")
     sub.add_parser("bq-validate", help="Validate a live BigQuery dataset vs the canonical DDL.")
+    sub.add_parser("turso-seed", help="Load the synthetic dataset into the configured Turso DB.")
     return p
 
 
@@ -98,6 +108,7 @@ _DISPATCH = {
     "eval": _cmd_eval,
     "lint": _cmd_lint,
     "bq-validate": _cmd_bq_validate,
+    "turso-seed": _cmd_turso_seed,
 }
 
 
@@ -112,6 +123,15 @@ def main(argv: list[str] | None = None) -> int:
     except Exception as exc:  # fail closed, surface context
         log.error("cli.error", command=args.command, error=str(exc))
         raise
+    finally:
+        # Release any open Turso libSQL clients (non-daemon worker threads would
+        # otherwise block process exit). No-op when the backend isn't Turso.
+        try:
+            from nexo_os.data.turso import close_all
+
+            close_all()
+        except Exception:  # pragma: no cover - shutdown best effort
+            pass
 
 
 if __name__ == "__main__":

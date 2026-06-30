@@ -10,6 +10,7 @@ from nexo_os.data.schema_def import (
     TABLES_BY_NAME,
     render_bigquery_ddl,
     render_duckdb_ddl,
+    render_sqlite_ddl,
 )
 
 
@@ -43,9 +44,23 @@ def test_pii_registry_flags_known_fields() -> None:
 def test_ddl_renders_for_all_tables() -> None:
     bq = render_bigquery_ddl()
     duck = render_duckdb_ddl()
+    sqlite = render_sqlite_ddl()
     for t in ALL_TABLES:
         assert f"CREATE TABLE IF NOT EXISTS {t.name}" in bq
         assert f"CREATE TABLE IF NOT EXISTS {t.name}" in duck
+        assert f"CREATE TABLE IF NOT EXISTS {t.name}" in sqlite
     # money uses NUMERIC in BQ and DECIMAL in DuckDB, never float
     assert "prima_ars NUMERIC" in bq
     assert "prima_ars DECIMAL(20, 2)" in duck
+
+
+def test_sqlite_keeps_money_exact_and_confidence_real() -> None:
+    """SQLite has no exact NUMERIC: money/pct must be TEXT (Decimal as string), while
+    confianza (a ratio, not money) is REAL. Guards the no-float-money invariant."""
+    sqlite = render_sqlite_ddl()
+    assert "prima_ars TEXT" in sqlite  # MONEY
+    assert "comision_pct TEXT" in sqlite  # PCT
+    assert "confianza REAL" in sqlite  # RATIO
+    # no money column may render as REAL/DOUBLE/NUMERIC/DECIMAL in SQLite
+    for bad in ("prima_ars REAL", "prima_ars NUMERIC", "prima_ars DECIMAL", "monto_ars REAL"):
+        assert bad not in sqlite
