@@ -20,8 +20,27 @@ human approves** before anything is considered done.
 
 ## Status
 
-Deployed. Data source in this repo is synthetic by default for PII and client-confidentiality reasons.
-This is the sanitized public version of the deployed architecture.
+Deployed and in production use for a single brokerage. Data source in this repo is
+synthetic by default for PII and client-confidentiality reasons. This is the
+sanitized public version of the deployed architecture.
+
+## Same code path: the demo runs the production logic
+
+The public synthetic demo is **not** a separate showcase build. The ten agents, the
+deterministic core, the orchestrator, the cross-agent reconciliations, the HITL
+approval inbox, and the hash-chained audit log are **identical** in the demo and in
+the live deployment. Only the data backend changes, at a single seam:
+
+`get_repository()` ([`nexo_os/data/factory.py`](nexo_os/data/factory.py)) returns a
+`SyntheticRepository` (local DuckDB over synthetic data) or a `BigQueryRepository`
+(the brokerage's live data) based on `NEXO_DATA_SOURCE`. Agents and core depend only
+on the `NexoRepository` interface — nothing else in the codebase knows which backend
+is live.
+
+So the demo here exercises the same code that runs in production. The real store,
+uploads, users, and audit log stay private (gitignored) for PII and
+client-confidentiality reasons — what's public is the architecture and a synthetic
+exercise of it, not the client's data.
 
 ## Quick start (synthetic, two commands after setup)
 

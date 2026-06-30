@@ -81,7 +81,10 @@ reproduce that ground truth exactly — so a bug on either side is caught.
 
 - **Data source is configurable** (`synthetic | bigquery`). Synthetic is the default,
   chosen for PII and client-confidentiality reasons; BigQuery is the production source,
-  selected with config + credentials and fails closed if selected without them.
+  selected with config + credentials and fails closed if selected without them. The
+  agents, core and orchestrator are **identical across sources**; only the repository
+  swaps at one seam (`get_repository()` in `nexo_os/data/factory.py`), so the synthetic
+  demo runs the same code path as the live deployment.
 - **Outbound execution is human-driven by design.** Approvals are recorded; the
   execution adapter performs no external side effect (no email/WhatsApp/SMS, no
   AMS/insurer write-back) — a deliberate control for a system that touches money.
