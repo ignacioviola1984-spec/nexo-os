@@ -26,11 +26,12 @@ def ensure_demo_ready() -> None:
         log.info("demo.seeding")
         generate_and_load()
 
-    # 2) a usable login (demo admin from env/secrets)
-    from nexo_os.security import users as user_store
+    # 2) a usable login — only when auth is enabled. The public demo (demo_mode) has
+    #    open access, so no users file is needed.
+    if not settings.demo_mode and settings.admin_password:
+        from nexo_os.security import users as user_store
 
-    if not user_store.load_users().get("usernames"):
-        if settings.admin_password:
+        if not user_store.load_users().get("usernames"):
             user_store.bootstrap_admin()
             log.info("demo.admin_bootstrapped", username=settings.admin_username)
 

@@ -10,14 +10,14 @@ The repo is ready to deploy as a public demo over **synthetic data** with zero s
    dataset once); after that it's fast.
 
 That's it. On first start the app:
-- generates the synthetic dataset if missing,
-- bootstraps a demo admin (shown on the login screen), and
+- generates the synthetic dataset if missing, and
 - runs one analysis cycle so the approval inbox is populated.
 
-## Login
-The login screen shows the demo credentials. With no secrets configured they default to:
-- user: `demo`
-- password: `nexo-demo-2026`
+## Access
+The public demo (`NEXO_DEMO_MODE=1`, the default for `streamlit_app.py`) has **open
+access** — no login, so any visitor (e.g. a recruiter) lands directly on the dashboard
+over synthetic data. The full authentication + RBAC path stays in the code and is used
+for a real deployment (set `NEXO_DEMO_MODE=0` and provide admin credentials).
 
 ## Optional secrets (Settings → Secrets)
 All optional — the demo works without them:

@@ -13,6 +13,7 @@ import streamlit as st
 import streamlit_authenticator as stauth
 
 from nexo_os.agents.specialists import all_agents
+from nexo_os.analysis import analyze_agent, executive_summary
 from nexo_os.audit import AuditWriter, verify_chain
 from nexo_os.config import get_settings
 from nexo_os.data.factory import get_repository
@@ -36,10 +37,47 @@ def _compute_all(repo) -> dict:
     return {a.id: a.compute(ctx) for a in all_agents()}
 
 
+def _ia_active() -> bool:
+    return bool(settings.anthropic_api_key)
+
+
+def _cached_analysis(key: str, generate):
+    """Generate an LLM analysis once per session (cached); a button can refresh it."""
+    store = st.session_state.setdefault("_analysis", {})
+    if key not in store:
+        store[key] = generate()
+    return store[key]
+
+
+def _render_analysis(key: str, title: str, generate) -> None:
+    cols = st.columns([6, 1])
+    cols[0].subheader(title)
+    if cols[1].button("↻", key=f"regen_{key}", help="Regenerar análisis"):
+        st.session_state.setdefault("_analysis", {}).pop(key, None)
+    if _ia_active():
+        with st.spinner("Analizando con IA..."):
+            analysis = _cached_analysis(key, generate)
+        st.markdown(analysis.text)
+        st.caption(
+            "Análisis generado por el modelo sobre cifras deterministas."
+            if analysis.used_model
+            else "Resumen determinista (el modelo no agregó análisis válido)."
+        )
+    else:
+        analysis = generate()  # deterministic fallback (no API key)
+        st.markdown(analysis.text)
+        st.caption("Modo determinista. Configurá ANTHROPIC_API_KEY para análisis con IA.")
+
+
 # ------------------------------------------------------------------ auth --------
 
 
 def _authenticate():
+    # Public demo: open access to synthetic data — no login. Real authentication is
+    # kept intact for production (demo_mode off).
+    if settings.demo_mode:
+        return None, "demo", "Demo (acceso público)"
+
     creds = user_store.to_authenticator_credentials()
     if not creds["usernames"]:
         st.error(
@@ -47,11 +85,6 @@ def _authenticate():
             "NEXO_ADMIN_PASSWORD definido en `.env`."
         )
         st.stop()
-    if settings.demo_mode:
-        st.info(
-            f"Demo público (datos sintéticos). Ingresá con usuario "
-            f"`{settings.admin_username}` y contraseña `{settings.admin_password}`."
-        )
     authenticator = stauth.Authenticate(
         creds,
         settings.auth_cookie_name,
@@ -102,9 +135,10 @@ def _view_overview(repo, results) -> None:
     c9.metric("Diferencias de comisión", fmt_ars(com.diferencia_total_ars))
 
     st.divider()
+    _render_analysis("exec", "Análisis ejecutivo", lambda: executive_summary(results, settings))
     st.caption(
         "Todos los números provienen del núcleo determinista. "
-        "Las recomendaciones en texto son secundarias a las cifras."
+        "El análisis interpreta y prioriza, sin alterar ninguna cifra."
     )
 
 
@@ -122,6 +156,12 @@ def _view_agent(repo, results, agent_id: str) -> None:
         for i, (k, v) in enumerate(figs.items()):
             disp = fmt_ars(v) if isinstance(v, Decimal) else (SIN_DATOS if v is None else str(v))
             cols[i % len(cols)].metric(k, disp)
+
+    _render_analysis(
+        f"agent_{agent_id}",
+        "Análisis del agente",
+        lambda: analyze_agent(agent_id, result, settings),
+    )
 
     st.subheader("Hallazgos")
     rows = [
@@ -213,16 +253,26 @@ def _view_audit(repo) -> None:
 def main() -> None:
     st.set_page_config(page_title="Nexo", page_icon="🛡️", layout="wide")
     authenticator, username, name = _authenticate()
-    role = user_store.get_role(username) or user_store.ROLE_OPERADOR
+    if settings.demo_mode:
+        role = user_store.ROLE_ADMIN  # demo sees every view
+    else:
+        role = user_store.get_role(username) or user_store.ROLE_OPERADOR
     repo = _repo()
 
     with st.sidebar:
         st.title("Nexo")
         st.caption("Co-piloto de la corredora")
         st.write(f"**{name}** · {role}")
-        authenticator.logout(location="sidebar")
+        if authenticator is not None:
+            authenticator.logout(location="sidebar")
+        elif settings.demo_mode:
+            st.caption("Demo público · acceso abierto a datos sintéticos.")
         st.divider()
         st.caption(f"Corte: {repo.snapshot_fecha} · {repo.data_source}")
+        if _ia_active():
+            st.caption(f"🟢 IA activa · modelo {settings.model}")
+        else:
+            st.caption("⚪ IA en modo determinista (configurá ANTHROPIC_API_KEY)")
         if st.button("Correr análisis", type="primary"):
             with st.spinner("Calculando..."):
                 ctx = run_cycle(repo=repo)
