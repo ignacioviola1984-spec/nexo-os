@@ -56,6 +56,37 @@ original paths (single-tenant behavior, unchanged). This is deployment-/process-
 `tenant_id` column. Agents, core, and the schema are untouched by tenancy; it lives
 at the `get_repository(tenant_id=...)` seam.
 
+## Scope & positioning
+
+A focused, **single-brokerage** operating model — deliberately not a
+multi-insurer quoting engine or a public-signup SaaS. What it is, on a maturity
+ladder:
+
+| Level | Capability | Status |
+|---|---|---|
+| L1 | Observe — deterministic metrics over the book | done |
+| L2 | **Propose + human-in-the-loop inbox** (approve / edit / reject, audited) | **current** |
+| L3 | Assisted execution — one-click outbound, still human-approved | seam ready, disabled |
+| L4 | Automated execution — policy-bounded, no human per action | out of scope |
+
+**Outbound execution is human-driven by design.** Approved actions are recorded;
+the execution adapter ([`nexo_os/security/execution.py`](nexo_os/security/execution.py)
+— `NoopExecutionAdapter`) records a "would execute" event and performs **no**
+external side effect. The seam is pluggable but disabled. So this is a deployed
+**decision / operating** model at **L2** — *not* end-to-end automation. That
+boundary is a deliberate control for a system that touches money and PII.
+
+### Public vs private
+
+- **Public (this repo):** the architecture + a synthetic exercise of it — code,
+  tests, the eval gate, CI, and a synthetic dataset. Safe to read; no client data.
+- **Private (the live deployment):** the brokerage's real store, uploads, users,
+  and audit log — never committed (gitignored) for PII / confidentiality. **Same
+  code path** (above); only the data backend differs.
+- **Evidence:** synthetic multi-dataset pipeline runs are in
+  [`docs/EVIDENCE.md`](docs/EVIDENCE.md); anonymized production aggregates (counts
+  only, no identities) go in [`docs/PRODUCTION_EVIDENCE.md`](docs/PRODUCTION_EVIDENCE.md).
+
 ## Quick start (synthetic, two commands after setup)
 
 ```bash
