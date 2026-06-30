@@ -26,6 +26,16 @@ class DataSource(StrEnum):
 
     synthetic = "synthetic"
     bigquery = "bigquery"
+    turso = "turso"
+
+
+class SystemStore(StrEnum):
+    """Where the system tables (acciones, agent_runs, audit_log) live. `default`
+    keeps them with the domain backend; `turso` routes them to hosted Turso even
+    when the domain source is synthetic or bigquery (the hybrid mode)."""
+
+    default = "default"
+    turso = "turso"
 
 
 class MoraBuckets(BaseModel):
@@ -151,6 +161,15 @@ class Settings(BaseSettings):
     bq_project: str | None = Field(default=None, alias="NEXO_BQ_PROJECT")
     bq_dataset: str = Field(default="nexo", alias="NEXO_BQ_DATASET")
     bq_credentials_path: Path | None = Field(default=None, alias="NEXO_BQ_CREDENTIALS_PATH")
+
+    # --- Turso / libSQL backend (optional; opt-in, fails closed) ---
+    # url is `libsql://<db>.turso.io` (remote) or `file:./nexo_turso.db` (local dev/test);
+    # auth token is required for remote, unused for a local file.
+    turso_database_url: str | None = Field(default=None, alias="NEXO_TURSO_DATABASE_URL")
+    turso_auth_token: str | None = Field(default=None, alias="NEXO_TURSO_AUTH_TOKEN")
+    # Hybrid override: keep domain on synthetic/bigquery but persist the system tables
+    # in Turso (survives Streamlit Cloud's ephemeral filesystem across restarts).
+    system_store: SystemStore = Field(default=SystemStore.default, alias="NEXO_SYSTEM_STORE")
 
     # --- thresholds ---
     thresholds: Thresholds = Field(default_factory=Thresholds)

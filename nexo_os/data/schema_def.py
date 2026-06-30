@@ -1,35 +1,42 @@
 """Canonical schema definition — the single structured source of truth for:
   * the BigQuery DDL (the production contract),
   * the DuckDB DDL (the synthetic dev/test store),
+  * the SQLite/libSQL DDL (the Turso backend),
   * the PII field registry (drives redaction), and
   * a contract test that the pydantic models in `models.py` match column-for-column.
 
 The schema is the contract: synthetic data conforms to it exactly, and the future
 BigQuery tables match it (same table names, columns, types, grain). Edit here, and
-both DDLs plus the model contract test follow.
+all DDLs plus the model contract test follow.
+
+SQLite/libSQL note: SQLite has no exact NUMERIC type (REAL is IEEE float and would
+corrupt money), so MONEY and PCT map to TEXT — the Decimal is stored as its string
+form and coerced back to Decimal by the pydantic models on read. DATE/TIMESTAMP map
+to TEXT (ISO strings, which sort chronologically) and BOOL to INTEGER (0/1). All
+monetary math happens in `nexo_os.core`; SQL never compares money or dates numerically.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 
-# --- Reusable type aliases (bq_type, duck_type) -------------------------------
-ID = ("STRING", "VARCHAR")
-TEXT = ("STRING", "VARCHAR")
-MONEY = ("NUMERIC", "DECIMAL(20, 2)")  # ARS, exact; never float
-PCT = ("NUMERIC", "DECIMAL(8, 6)")  # commission fraction, e.g. 0.125 = 12.5%
-RATIO = ("FLOAT64", "DOUBLE")  # confidence 0..1; not money
-DATE = ("DATE", "DATE")
-TS = ("TIMESTAMP", "TIMESTAMP")
-INT = ("INT64", "INTEGER")
-BOOL = ("BOOL", "BOOLEAN")
-JSON = ("JSON", "VARCHAR")  # JSON stored as text in DuckDB (parsed on read)
+# --- Reusable type aliases (bq_type, duck_type, sqlite_type) ------------------
+ID = ("STRING", "VARCHAR", "TEXT")
+TEXT = ("STRING", "VARCHAR", "TEXT")
+MONEY = ("NUMERIC", "DECIMAL(20, 2)", "TEXT")  # ARS, exact; never float (TEXT in SQLite)
+PCT = ("NUMERIC", "DECIMAL(8, 6)", "TEXT")  # commission fraction, e.g. 0.125 = 12.5%
+RATIO = ("FLOAT64", "DOUBLE", "REAL")  # confidence 0..1; not money
+DATE = ("DATE", "DATE", "TEXT")  # ISO date string in SQLite
+TS = ("TIMESTAMP", "TIMESTAMP", "TEXT")  # ISO datetime string in SQLite
+INT = ("INT64", "INTEGER", "INTEGER")
+BOOL = ("BOOL", "BOOLEAN", "INTEGER")  # 0/1 in SQLite
+JSON = ("JSON", "VARCHAR", "TEXT")  # JSON stored as text (parsed on read)
 
 
 @dataclass(frozen=True)
 class Column:
     name: str
-    types: tuple[str, str]  # (bigquery, duckdb)
+    types: tuple[str, str, str]  # (bigquery, duckdb, sqlite)
     nullable: bool = False
     pii: bool = False
     pk: bool = False
@@ -43,6 +50,10 @@ class Column:
     @property
     def duck_type(self) -> str:
         return self.types[1]
+
+    @property
+    def sqlite_type(self) -> str:
+        return self.types[2]
 
 
 @dataclass(frozen=True)
@@ -321,18 +332,27 @@ PII_FIELDS: dict[str, set[str]] = {t.name: set(t.pii_columns) for t in ALL_TABLE
 # ------------------------------------------------------------------------------
 
 
+_TYPE_GETTER = {
+    "bigquery": lambda c: c.bq_type,
+    "duckdb": lambda c: c.duck_type,
+    "sqlite": lambda c: c.sqlite_type,
+}
+
+
 def _render_ddl(tables: list[Table], dialect: str, qualify: str = "") -> str:
-    """Render CREATE TABLE statements. dialect in {'bigquery', 'duckdb'}."""
+    """Render CREATE TABLE statements. dialect in {'bigquery', 'duckdb', 'sqlite'}."""
+    get_type = _TYPE_GETTER[dialect]
     out: list[str] = []
     for t in tables:
         pk = [c.name for c in t.columns if c.pk]
-        has_pk_clause = dialect == "duckdb" and bool(pk)
+        # BigQuery has no PRIMARY KEY clause; DuckDB and SQLite both take a table-level one.
+        has_pk_clause = dialect in ("duckdb", "sqlite") and bool(pk)
         # Build each column's "name type [NOT NULL]" plus its optional note. The
         # separating comma MUST come before any inline '--' comment, otherwise the
         # comment swallows the comma and the statement is invalid SQL.
         defs = []
         for c in t.columns:
-            sql_type = c.bq_type if dialect == "bigquery" else c.duck_type
+            sql_type = get_type(c)
             null = "" if c.nullable else " NOT NULL"
             defs.append((f"  {c.name} {sql_type}{null}", c.note))
         lines = []
@@ -362,3 +382,9 @@ def render_bigquery_ddl(qualify: str = "") -> str:
 
 def render_duckdb_ddl() -> str:
     return _render_ddl(ALL_TABLES, "duckdb")
+
+
+def render_sqlite_ddl(tables: list[Table] | None = None) -> str:
+    """SQLite/libSQL DDL for the Turso backend. Pass a subset (e.g. SYSTEM_TABLES)
+    to render only some tables; defaults to all."""
+    return _render_ddl(tables if tables is not None else ALL_TABLES, "sqlite")

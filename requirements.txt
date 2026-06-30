@@ -11,3 +11,6 @@ pyarrow==24.0.0
 streamlit==1.58.0
 streamlit-authenticator==0.4.2
 bcrypt==5.0.0
+# Optional Turso/libSQL backend — uncomment to deploy with NEXO_DATA_SOURCE=turso
+# or NEXO_SYSTEM_STORE=turso (persists approvals + audit log across restarts).
+# libsql-client==0.3.1

@@ -39,8 +39,8 @@ Everything below serves these three.
 | Layer | Module | Role |
 |---|---|---|
 | Config | `config.py` | settings + all tunable thresholds (no magic numbers in agents) |
-| Data access | `data/repository.py`, `data/synthetic.py`, `data/bigquery.py`, `data/factory.py` | one typed interface; synthetic by default, BigQuery configurable |
-| Schema | `data/schema_def.py` | single source → DDL (both dialects) + PII registry |
+| Data access | `data/repository.py`, `data/synthetic.py`, `data/bigquery.py`, `data/turso.py`, `data/composite.py`, `data/factory.py` | one typed interface; synthetic by default, BigQuery/Turso configurable (Turso also as a hybrid system-table store) |
+| Schema | `data/schema_def.py` | single source → DDL (BigQuery / DuckDB / SQLite) + PII registry |
 | Core | `core/*` | deterministic metric library |
 | State | `state.py` | shared, memoized snapshot + results |
 | Agents | `agents/specialists.py` | 10 specialists: compute → propose → narrate |
@@ -79,10 +79,12 @@ reproduce that ground truth exactly — so a bug on either side is caught.
 
 ## Configuration & boundaries
 
-- **Data source is configurable** (`synthetic | bigquery`). Synthetic is the default,
-  chosen for PII and client-confidentiality reasons; BigQuery is the production source,
-  selected with config + credentials (see `BIGQUERY_CUTOVER.md`) and fails closed if
-  selected without them.
+- **Data source is configurable** (`synthetic | bigquery | turso`). Synthetic is the
+  default, chosen for PII and client-confidentiality reasons; BigQuery is the production
+  source (see `docs/BIGQUERY_CUTOVER.md`); Turso (hosted libSQL) is an alternative
+  hosted store and can also persist just the system tables in a hybrid via
+  `NEXO_SYSTEM_STORE=turso` (see `docs/TURSO.md`). BigQuery and Turso are opt-in and
+  fail closed if selected without their connection settings.
 - **Outbound execution is human-driven by design.** Approvals are recorded; the
   execution adapter performs no external side effect (no email/WhatsApp/SMS, no
   AMS/insurer write-back) — a deliberate control for a system that touches money.
