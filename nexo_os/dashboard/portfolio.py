@@ -18,15 +18,23 @@ import streamlit as st
 # --------------------------------------------------------------------------- #
 ABOUT = {
     "nombre": "Ignacio Viola",
-    "rol": "[Tu rol / titulo profesional]",
+    # DRAFT - verificá/ajustá tu título real. Alternativas:
+    #   "Software / Data Engineer - IA aplicada, determinismo y auditabilidad"
+    #   "Ingeniero de Software - IA aplicada a operaciones"
+    "rol": "Ingeniero de Software - sistemas de datos y aplicaciones de IA con humano en el ciclo",
+    # DRAFT - cierto y verificable contra este repo; editá a gusto.
     "bio": (
-        "[Editar: 2-3 lineas sobre vos. Ej.: construyo sistemas de datos confiables y "
-        "aplicaciones de IA con humano en el ciclo, donde el modelo asiste pero los "
-        "numeros se calculan en codigo y se auditan.]"
+        "Construyo sistemas donde la IA asiste pero las decisiones son auditables: "
+        "los numeros se calculan en codigo (deterministas, trazables), el modelo solo "
+        "prioriza y redacta, y una persona aprueba cada accion. Nexo es un ejemplo - "
+        "un modelo operativo para una correduria de seguros con bandeja human-in-the-loop, "
+        "auditoria encadenada por hash y backends de datos intercambiables "
+        "(sintetico / BigQuery / GCS)."
     ),
     "email": "ignacioviola1984@gmail.com",
     "github": "https://github.com/ignacioviola1984-spec",
     "github_repo": "https://github.com/ignacioviola1984-spec/nexo-os",
+    # Completá con tu URL real de LinkedIn (con el placeholder "[" no se muestra el link).
     "linkedin": "https://www.linkedin.com/in/[tu-perfil]",
 }
 
@@ -80,10 +88,16 @@ def render_perfil(settings, repo) -> None:
     st.header(ABOUT["nombre"])
     st.subheader(ABOUT["rol"])
     st.write(ABOUT["bio"])
-    cols = st.columns(3)
-    cols[0].markdown(f"✉️ [{ABOUT['email']}](mailto:{ABOUT['email']})")
-    cols[1].markdown(f"💻 [GitHub]({ABOUT['github']})")
-    cols[2].markdown(f"🔗 [LinkedIn]({ABOUT['linkedin']})")
+    # Show only configured links (skip any value still holding a "[placeholder]").
+    links = [
+        f"✉️ [{ABOUT['email']}](mailto:{ABOUT['email']})",
+        f"💻 [GitHub]({ABOUT['github']})",
+    ]
+    if "[" not in ABOUT["linkedin"]:
+        links.append(f"🔗 [LinkedIn]({ABOUT['linkedin']})")
+    cols = st.columns(len(links))
+    for col, link in zip(cols, links, strict=True):
+        col.markdown(link)
     st.divider()
     st.caption(
         "Edita nexo_os/dashboard/portfolio.py (ABOUT) para completar rol, bio y LinkedIn. "
