@@ -29,6 +29,9 @@ dependencies = [
 [project.optional-dependencies]
 # Optional BigQuery backend — not installed by default. `pip install -e ".[bigquery]"`.
 bigquery = ["google-cloud-bigquery==3.27.0"]
+# Optional Google Cloud Storage backend — `pip install -e ".[gcs]"`. duckdb (a core
+# dep) reads the downloaded Parquet; google-cloud-storage only fetches the objects.
+gcs = ["google-cloud-storage>=2.16"]
 # Optional Turso/libSQL backend — pure-Python client (local file + remote Turso).
 # `pip install -e ".[turso]"`.
 turso = ["libsql-client==0.3.1"]

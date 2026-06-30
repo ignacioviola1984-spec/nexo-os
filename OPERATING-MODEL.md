@@ -79,12 +79,13 @@ reproduce that ground truth exactly — so a bug on either side is caught.
 
 ## Configuration & boundaries
 
-- **Data source is configurable** (`synthetic | bigquery | turso`). Synthetic is the
-  default, chosen for PII and client-confidentiality reasons; BigQuery is the production
-  source (see `docs/BIGQUERY_CUTOVER.md`); Turso (hosted libSQL) is an alternative
-  hosted store and can also persist just the system tables in a hybrid via
-  `NEXO_SYSTEM_STORE=turso` (see `docs/TURSO.md`). BigQuery and Turso are opt-in and
-  fail closed if selected without their connection settings.
+- **Data source is configurable** (`synthetic | bigquery | gcs | turso`). Synthetic is
+  the default, chosen for PII and client-confidentiality reasons; BigQuery/GCS/Turso are
+  opt-in and fail closed if selected without their settings. Turso (hosted libSQL) can
+  also persist just the system tables in a hybrid via `NEXO_SYSTEM_STORE=turso` (see
+  `docs/TURSO.md`). The agents, core and orchestrator are **identical across sources**;
+  only the repository swaps at one seam (`get_repository()` in `nexo_os/data/factory.py`),
+  so the synthetic demo runs the same code path as the live deployment.
 - **Outbound execution is human-driven by design.** Approvals are recorded; the
   execution adapter performs no external side effect (no email/WhatsApp/SMS, no
   AMS/insurer write-back) — a deliberate control for a system that touches money.

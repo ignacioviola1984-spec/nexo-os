@@ -1,0 +1,40 @@
+name: CI
+
+# Visible, reproducible pipeline: lint -> seed synthetic data -> tests -> eval gate.
+# Runs on every push/PR to main. The eval harness exits non-zero on any guardrail
+# failure, so a green check means determinism + grounding + reconciliation held.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install
+        run: pip install -e ".[dev]"
+
+      - name: Lint (ruff + black)
+        run: python -m nexo_os lint
+
+      - name: Seed synthetic data
+        run: python -m nexo_os seed
+
+      - name: Tests
+        run: python -m nexo_os test
+
+      - name: Eval gate (determinism / grounding / reconciliation)
+        run: python -m nexo_os eval

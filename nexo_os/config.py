@@ -26,7 +26,8 @@ class DataSource(StrEnum):
 
     synthetic = "synthetic"
     bigquery = "bigquery"
-    turso = "turso"
+    gcs = "gcs"  # cloud object storage (Google Cloud Storage), domain extracts as Parquet
+    turso = "turso"  # hosted libSQL (SQLite-compatible)
 
 
 class SystemStore(StrEnum):
@@ -162,6 +163,11 @@ class Settings(BaseSettings):
     bq_dataset: str = Field(default="nexo", alias="NEXO_BQ_DATASET")
     bq_credentials_path: Path | None = Field(default=None, alias="NEXO_BQ_CREDENTIALS_PATH")
 
+    # --- Google Cloud Storage backend (optional; domain extracts as Parquet) ---
+    gcs_bucket: str | None = Field(default=None, alias="NEXO_GCS_BUCKET")
+    gcs_prefix: str = Field(default="nexo/", alias="NEXO_GCS_PREFIX")
+    gcs_credentials_path: Path | None = Field(default=None, alias="NEXO_GCS_CREDENTIALS_PATH")
+
     # --- Turso / libSQL backend (optional; opt-in, fails closed) ---
     # url is `libsql://<db>.turso.io` (remote) or `file:./nexo_turso.db` (local dev/test);
     # auth token is required for remote, unused for a local file.
@@ -170,6 +176,12 @@ class Settings(BaseSettings):
     # Hybrid override: keep domain on synthetic/bigquery but persist the system tables
     # in Turso (survives Streamlit Cloud's ephemeral filesystem across restarts).
     system_store: SystemStore = Field(default=SystemStore.default, alias="NEXO_SYSTEM_STORE")
+
+    # --- multi-tenancy: per-tenant data isolation ---
+    # One deployment serves one tenant, selected by NEXO_TENANT_ID. Each tenant's
+    # data lives in its own store / dataset / GCS prefix (hard isolation). "default"
+    # keeps the original paths (single-tenant behavior, backward compatible).
+    tenant_id: str = Field(default="default", alias="NEXO_TENANT_ID")
 
     # --- thresholds ---
     thresholds: Thresholds = Field(default_factory=Thresholds)

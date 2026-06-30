@@ -20,8 +20,72 @@ human approves** before anything is considered done.
 
 ## Status
 
-Deployed. Data source in this repo is synthetic by default for PII and client-confidentiality reasons.
-This is the sanitized public version of the deployed architecture.
+Deployed and in production use for a single brokerage. Data source in this repo is
+synthetic by default for PII and client-confidentiality reasons. This is the
+sanitized public version of the deployed architecture.
+
+## Same code path: the demo runs the production logic
+
+The public synthetic demo is **not** a separate showcase build. The ten agents, the
+deterministic core, the orchestrator, the cross-agent reconciliations, the HITL
+approval inbox, and the hash-chained audit log are **identical** in the demo and in
+the live deployment. Only the data backend changes, at a single seam:
+
+`get_repository()` ([`nexo_os/data/factory.py`](nexo_os/data/factory.py)) returns the
+backend for `NEXO_DATA_SOURCE` — agents and core depend only on the `NexoRepository`
+interface; nothing else knows which backend is live:
+
+- **`synthetic`** — local DuckDB over generated data (the default; the public demo).
+- **`bigquery`** — the brokerage's live data warehouse (production).
+- **`gcs`** — cloud object storage: domain extracts as Parquet in a Google Cloud
+  Storage bucket, loaded into a local store and served identically. Fails closed
+  without bucket/credentials.
+
+So the demo here exercises the same code that runs in production. The real store,
+uploads, users, and audit log stay private (gitignored) for PII and
+client-confidentiality reasons — what's public is the architecture and a synthetic
+exercise of it, not the client's data.
+
+## Multi-tenancy (per-tenant data isolation)
+
+The system is multi-tenant by **hard data isolation**: the active tenant
+(`NEXO_TENANT_ID`) selects an isolated store / BigQuery dataset / GCS prefix, so a
+brokerage's data never shares a table with another's. The `default` tenant keeps the
+original paths (single-tenant behavior, unchanged). This is deployment-/process-per
+-tenant isolation — preferred for regulated, PII-bearing data over a shared
+`tenant_id` column. Agents, core, and the schema are untouched by tenancy; it lives
+at the `get_repository(tenant_id=...)` seam.
+
+## Scope & positioning
+
+A focused, **single-brokerage** operating model — deliberately not a
+multi-insurer quoting engine or a public-signup SaaS. What it is, on a maturity
+ladder:
+
+| Level | Capability | Status |
+|---|---|---|
+| L1 | Observe — deterministic metrics over the book | done |
+| L2 | **Propose + human-in-the-loop inbox** (approve / edit / reject, audited) | **current** |
+| L3 | Assisted execution — one-click outbound, still human-approved | seam ready, disabled |
+| L4 | Automated execution — policy-bounded, no human per action | out of scope |
+
+**Outbound execution is human-driven by design.** Approved actions are recorded;
+the execution adapter ([`nexo_os/security/execution.py`](nexo_os/security/execution.py)
+— `NoopExecutionAdapter`) records a "would execute" event and performs **no**
+external side effect. The seam is pluggable but disabled. So this is a deployed
+**decision / operating** model at **L2** — *not* end-to-end automation. That
+boundary is a deliberate control for a system that touches money and PII.
+
+### Public vs private
+
+- **Public (this repo):** the architecture + a synthetic exercise of it — code,
+  tests, the eval gate, CI, and a synthetic dataset. Safe to read; no client data.
+- **Private (the live deployment):** the brokerage's real store, uploads, users,
+  and audit log — never committed (gitignored) for PII / confidentiality. **Same
+  code path** (above); only the data backend differs.
+- **Evidence:** synthetic multi-dataset pipeline runs are in
+  [`docs/EVIDENCE.md`](docs/EVIDENCE.md); anonymized production aggregates (counts
+  only, no identities) go in [`docs/PRODUCTION_EVIDENCE.md`](docs/PRODUCTION_EVIDENCE.md).
 
 ## Quick start (synthetic, two commands after setup)
 
@@ -58,7 +122,6 @@ optional — every target maps 1:1 to `python -m nexo_os <command>`.
 - [`OPERATING-MODEL.md`](OPERATING-MODEL.md) — how it works; the determinism / HITL boundary.
 - [`nexo_os/data/schema/DATA_MODEL.md`](nexo_os/data/schema/DATA_MODEL.md) — canonical schema, grains, PII flags.
 - [`SECURITY.md`](SECURITY.md) — auth, PII handling, the disabled execution seam, audit chain.
-- [`docs/BIGQUERY_CUTOVER.md`](docs/BIGQUERY_CUTOVER.md) — BigQuery cutover runbook.
 
 ## Language
 
