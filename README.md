@@ -58,7 +58,6 @@ optional — every target maps 1:1 to `python -m nexo_os <command>`.
 - [`OPERATING-MODEL.md`](OPERATING-MODEL.md) — how it works; the determinism / HITL boundary.
 - [`nexo_os/data/schema/DATA_MODEL.md`](nexo_os/data/schema/DATA_MODEL.md) — canonical schema, grains, PII flags.
 - [`SECURITY.md`](SECURITY.md) — auth, PII handling, the disabled execution seam, audit chain.
-- [`docs/BIGQUERY_CUTOVER.md`](docs/BIGQUERY_CUTOVER.md) — BigQuery cutover runbook.
 
 ## Language
 
