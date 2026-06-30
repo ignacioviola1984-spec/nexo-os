@@ -31,16 +31,30 @@ deterministic core, the orchestrator, the cross-agent reconciliations, the HITL
 approval inbox, and the hash-chained audit log are **identical** in the demo and in
 the live deployment. Only the data backend changes, at a single seam:
 
-`get_repository()` ([`nexo_os/data/factory.py`](nexo_os/data/factory.py)) returns a
-`SyntheticRepository` (local DuckDB over synthetic data) or a `BigQueryRepository`
-(the brokerage's live data) based on `NEXO_DATA_SOURCE`. Agents and core depend only
-on the `NexoRepository` interface — nothing else in the codebase knows which backend
-is live.
+`get_repository()` ([`nexo_os/data/factory.py`](nexo_os/data/factory.py)) returns the
+backend for `NEXO_DATA_SOURCE` — agents and core depend only on the `NexoRepository`
+interface; nothing else knows which backend is live:
+
+- **`synthetic`** — local DuckDB over generated data (the default; the public demo).
+- **`bigquery`** — the brokerage's live data warehouse (production).
+- **`gcs`** — cloud object storage: domain extracts as Parquet in a Google Cloud
+  Storage bucket, loaded into a local store and served identically. Fails closed
+  without bucket/credentials.
 
 So the demo here exercises the same code that runs in production. The real store,
 uploads, users, and audit log stay private (gitignored) for PII and
 client-confidentiality reasons — what's public is the architecture and a synthetic
 exercise of it, not the client's data.
+
+## Multi-tenancy (per-tenant data isolation)
+
+The system is multi-tenant by **hard data isolation**: the active tenant
+(`NEXO_TENANT_ID`) selects an isolated store / BigQuery dataset / GCS prefix, so a
+brokerage's data never shares a table with another's. The `default` tenant keeps the
+original paths (single-tenant behavior, unchanged). This is deployment-/process-per
+-tenant isolation — preferred for regulated, PII-bearing data over a shared
+`tenant_id` column. Agents, core, and the schema are untouched by tenancy; it lives
+at the `get_repository(tenant_id=...)` seam.
 
 ## Quick start (synthetic, two commands after setup)
 

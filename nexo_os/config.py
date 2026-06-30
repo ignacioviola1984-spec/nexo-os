@@ -26,6 +26,7 @@ class DataSource(StrEnum):
 
     synthetic = "synthetic"
     bigquery = "bigquery"
+    gcs = "gcs"  # cloud object storage (Google Cloud Storage), domain extracts as Parquet
 
 
 class MoraBuckets(BaseModel):
@@ -151,6 +152,17 @@ class Settings(BaseSettings):
     bq_project: str | None = Field(default=None, alias="NEXO_BQ_PROJECT")
     bq_dataset: str = Field(default="nexo", alias="NEXO_BQ_DATASET")
     bq_credentials_path: Path | None = Field(default=None, alias="NEXO_BQ_CREDENTIALS_PATH")
+
+    # --- Google Cloud Storage backend (optional; domain extracts as Parquet) ---
+    gcs_bucket: str | None = Field(default=None, alias="NEXO_GCS_BUCKET")
+    gcs_prefix: str = Field(default="nexo/", alias="NEXO_GCS_PREFIX")
+    gcs_credentials_path: Path | None = Field(default=None, alias="NEXO_GCS_CREDENTIALS_PATH")
+
+    # --- multi-tenancy: per-tenant data isolation ---
+    # One deployment serves one tenant, selected by NEXO_TENANT_ID. Each tenant's
+    # data lives in its own store / dataset / GCS prefix (hard isolation). "default"
+    # keeps the original paths (single-tenant behavior, backward compatible).
+    tenant_id: str = Field(default="default", alias="NEXO_TENANT_ID")
 
     # --- thresholds ---
     thresholds: Thresholds = Field(default_factory=Thresholds)

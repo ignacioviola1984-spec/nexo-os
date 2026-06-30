@@ -29,6 +29,9 @@ dependencies = [
 [project.optional-dependencies]
 # Optional BigQuery backend — not installed by default. `pip install -e ".[bigquery]"`.
 bigquery = ["google-cloud-bigquery==3.27.0"]
+# Optional Google Cloud Storage backend — `pip install -e ".[gcs]"`. duckdb (a core
+# dep) reads the downloaded Parquet; google-cloud-storage only fetches the objects.
+gcs = ["google-cloud-storage>=2.16"]
 dev = ["pytest==9.1.1", "pytest-cov==7.1.0", "ruff>=0.6", "black>=24"]
 
 [project.scripts]

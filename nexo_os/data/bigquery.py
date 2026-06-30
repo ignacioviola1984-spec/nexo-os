@@ -58,11 +58,11 @@ def _cols(table: str) -> list[str]:
 class BigQueryRepository(NexoRepository):
     data_source = "bigquery"
 
-    def __init__(self, snapshot_fecha: date | None = None) -> None:
+    def __init__(self, snapshot_fecha: date | None = None, dataset: str | None = None) -> None:
         settings = get_settings()
         self._snapshot = snapshot_fecha or settings.snapshot_fecha
         self._project = settings.bq_project
-        self._dataset = settings.bq_dataset
+        self._dataset = dataset or settings.bq_dataset  # per-tenant dataset override
         cred_path = settings.bq_credentials_path
 
         if not self._project:

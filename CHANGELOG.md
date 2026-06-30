@@ -5,6 +5,18 @@ All notable changes to this project are documented here. Versioning is
 synthetic exercise of it; the live deployment runs privately over the brokerage's
 data (see README → "Same code path").
 
+## [Unreleased]
+
+### Added
+- **GCS data source** (`NEXO_DATA_SOURCE=gcs`): reads domain extracts (Parquet)
+  from a Google Cloud Storage bucket into a local store and serves them through the
+  same `NexoRepository` interface. Fails closed without bucket/credentials/library,
+  same standard as BigQuery. Optional dep: `pip install -e ".[gcs]"`.
+- **Multi-tenancy by per-tenant data isolation** (`NEXO_TENANT_ID`): each tenant's
+  data lives in its own store / BigQuery dataset / GCS prefix; `default` keeps the
+  original single-tenant paths. Agents, core, and schema are untouched — tenancy
+  lives at the `get_repository(tenant_id=...)` seam.
+
 ## [2.0.0] - 2026-06-30
 
 Production operating model for a single insurance brokerage: ten deterministic
