@@ -1,5 +1,9 @@
 # Nexo Operating Model
 
+[![Live demo](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://nexo-os-demo.streamlit.app)
+
+**Live synthetic demo:** https://nexo-os-demo.streamlit.app
+
 Production analytics-and-action system for a single Argentine insurance brokerage.
 Ten specialist agents read the broker's data, compute the state of the business
 **deterministically**, surface what needs attention, and **propose actions that a
