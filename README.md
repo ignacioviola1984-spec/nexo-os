@@ -128,12 +128,31 @@ optional — every target maps 1:1 to `python -m nexo_os <command>`.
 | `lint` | ruff + black checks |
 | `bq-validate` | Validate a live BigQuery dataset vs the canonical DDL |
 | `turso-seed` | Load the synthetic dataset into the configured Turso database |
+| `healthcheck` | Liveness/readiness probe (JSON); non-zero when not ready |
+| `controls-check` | SOC2-style control self-assessment (non-zero on any FAIL) |
+| `security-review` | Automated security review (non-zero on HIGH/CRITICAL) |
+| `data-contract-validate` | Validate the active domain source vs the data contracts |
+| `rotate-secret cookie` | Print a cookie-key rotation plan |
+| `iam-validate` | Validate the cloud IAM group->role bindings |
+| `incident-report` | Snapshot state + record an incident to the audit log |
+| `release-manifest` / `rollback-check` | Release identity + schema-guarded rollback |
+
+## Enterprise / production hardening
+
+RBAC, SSO/OIDC, cloud IAM, observability, data contracts, secret rotation, controls,
+security review, release/rollback, and incident response - added as real, tested code on
+top of the deterministic HITL core, without changing how any figure is computed. Seams
+(SSO, cloud IAM, cloud secret managers) fail closed until configured, and the control
+harness and security review *check* the posture rather than assert a certification. See
+[`docs/ENTERPRISE.md`](docs/ENTERPRISE.md) for the twelve concerns and their status.
 
 ## Documentation
 
 - [`OPERATING-MODEL.md`](OPERATING-MODEL.md) — how it works; the determinism / HITL boundary.
 - [`nexo_os/data/schema/DATA_MODEL.md`](nexo_os/data/schema/DATA_MODEL.md) — canonical schema, grains, PII flags.
 - [`docs/TURSO.md`](docs/TURSO.md) — the Turso/libSQL backend (full + hybrid system store).
+- [`docs/ENTERPRISE.md`](docs/ENTERPRISE.md) — the enterprise hardening layer (RBAC, SSO, IAM, observability, controls, rollback, incident response).
+- [`docs/SOC2_CONTROLS.md`](docs/SOC2_CONTROLS.md) · [`docs/SECURITY_REVIEW.md`](docs/SECURITY_REVIEW.md) · [`docs/OBSERVABILITY.md`](docs/OBSERVABILITY.md) · [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) · [`docs/INCIDENT_RESPONSE.md`](docs/INCIDENT_RESPONSE.md)
 - [`SECURITY.md`](SECURITY.md) — auth, PII handling, the disabled execution seam, audit chain.
 
 ## Language

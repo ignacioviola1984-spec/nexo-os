@@ -35,6 +35,9 @@ gcs = ["google-cloud-storage>=2.16"]
 # Optional Turso/libSQL backend — pure-Python client (local file + remote Turso).
 # `pip install -e ".[turso]"`.
 turso = ["libsql-client==0.3.1"]
+# Optional SSO local ID-token verification (enterprise/sso.py). Not needed behind a
+# verifying identity-aware proxy (NEXO_OIDC_TRUST_PROXY_CLAIMS=true). `pip install -e ".[sso]"`.
+sso = ["pyjwt[crypto]>=2.9"]
 dev = ["pytest==9.1.1", "pytest-cov==7.1.0", "ruff>=0.6", "black>=24"]
 
 [project.scripts]

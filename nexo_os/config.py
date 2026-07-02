@@ -39,6 +39,35 @@ class SystemStore(StrEnum):
     turso = "turso"
 
 
+class Environment(StrEnum):
+    """Deployment environment. `production` tightens the enterprise controls:
+    weak secrets, open demo access and unpinned config fail the security review."""
+
+    dev = "dev"
+    staging = "staging"
+    production = "production"
+
+
+class AuthMode(StrEnum):
+    """How seats authenticate. `password` is the built-in bcrypt store; `oidc` is
+    the SSO seam (enterprise/sso.py) - federated identity via an external IdP,
+    fails closed without issuer/client configured."""
+
+    password = "password"
+    oidc = "oidc"
+
+
+class SecretManager(StrEnum):
+    """Where runtime secrets are sourced. `env` reads process env / `.env`;
+    `gcp` / `aws` / `vault` are cloud secret-manager seams (enterprise/secrets.py),
+    each fails closed when selected without its client configured."""
+
+    env = "env"
+    gcp = "gcp"
+    aws = "aws"
+    vault = "vault"
+
+
 class MoraBuckets(BaseModel):
     """Aging bucket edges (days) for overdue installments. Computed at read-time
     relative to the run snapshot date, never stored."""
@@ -183,8 +212,62 @@ class Settings(BaseSettings):
     # keeps the original paths (single-tenant behavior, backward compatible).
     tenant_id: str = Field(default="default", alias="NEXO_TENANT_ID")
 
+    # ==================== enterprise / production hardening ====================
+    # Every seam below is code-real and fails closed: selecting it without its
+    # configuration raises rather than degrading silently. `production` tightens
+    # the security review and SOC2 control checks.
+
+    # --- environment + release identity (observability, controls, rollback) ---
+    environment: Environment = Field(default=Environment.dev, alias="NEXO_ENV")
+    service_version: str = Field(default="2.0.0", alias="NEXO_SERVICE_VERSION")
+    git_sha: str | None = Field(default=None, alias="NEXO_GIT_SHA")
+
+    # --- SSO / federated identity (enterprise/sso.py) ---
+    auth_mode: AuthMode = Field(default=AuthMode.password, alias="NEXO_AUTH_MODE")
+    oidc_issuer: str | None = Field(default=None, alias="NEXO_OIDC_ISSUER")
+    oidc_client_id: str | None = Field(default=None, alias="NEXO_OIDC_CLIENT_ID")
+    oidc_client_secret: str | None = Field(default=None, alias="NEXO_OIDC_CLIENT_SECRET")
+    oidc_redirect_uri: str | None = Field(default=None, alias="NEXO_OIDC_REDIRECT_URI")
+    oidc_scopes: str = Field(default="openid email profile groups", alias="NEXO_OIDC_SCOPES")
+    # Claim that carries the IdP group memberships used for IAM role binding.
+    oidc_groups_claim: str = Field(default="groups", alias="NEXO_OIDC_GROUPS_CLAIM")
+    # When true, trust that an upstream proxy (IAP / oauth2-proxy) already verified
+    # the ID token signature and forwards claims. When false, a local verifier
+    # (PyJWT, optional extra) must validate the signature or auth fails closed.
+    oidc_trust_proxy_claims: bool = Field(default=False, alias="NEXO_OIDC_TRUST_PROXY_CLAIMS")
+
+    # --- cloud IAM: external group -> Nexo role bindings (enterprise/iam.py) ---
+    # JSON mapping {"<idp-group>": "<nexo-role>"}, or a path to such a JSON file.
+    iam_role_bindings: str | None = Field(default=None, alias="NEXO_IAM_ROLE_BINDINGS")
+    iam_bindings_path: Path | None = Field(default=None, alias="NEXO_IAM_BINDINGS_PATH")
+    # Role assigned to a federated user matched by no binding (deny-by-default: none).
+    iam_default_role: str | None = Field(default=None, alias="NEXO_IAM_DEFAULT_ROLE")
+
+    # --- secrets management + rotation (enterprise/secrets.py) ---
+    secret_manager: SecretManager = Field(default=SecretManager.env, alias="NEXO_SECRET_MANAGER")
+    # Previous cookie key kept valid during a rotation grace window so live sessions
+    # are not force-logged-out the moment the primary key rotates.
+    auth_cookie_key_previous: str | None = Field(
+        default=None, alias="NEXO_AUTH_COOKIE_KEY_PREVIOUS"
+    )
+    # ISO date the primary cookie key was last rotated; the security review warns
+    # when it exceeds the max age in production.
+    auth_cookie_key_rotated_on: date | None = Field(
+        default=None, alias="NEXO_AUTH_COOKIE_KEY_ROTATED_ON"
+    )
+    secret_max_age_days: int = Field(default=90, alias="NEXO_SECRET_MAX_AGE_DAYS")
+
+    # --- observability / monitoring (enterprise/observability.py) ---
+    metrics_enabled: bool = Field(default=True, alias="NEXO_METRICS_ENABLED")
+    # Freshness SLA (hours) for the domain snapshot; monitoring alerts past it.
+    data_freshness_sla_hours: int = Field(default=48, alias="NEXO_DATA_FRESHNESS_SLA_HOURS")
+
     # --- thresholds ---
     thresholds: Thresholds = Field(default_factory=Thresholds)
+
+    @property
+    def is_production(self) -> bool:
+        return self.environment == Environment.production
 
     @property
     def snapshot_fecha(self) -> date:

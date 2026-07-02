@@ -38,3 +38,11 @@ jobs:
 
       - name: Eval gate (determinism / grounding / reconciliation)
         run: python -m nexo_os eval
+
+      - name: Enterprise gates (controls + security review)
+        run: |
+          python -m nexo_os controls-check
+          python -m nexo_os security-review
+
+      - name: Data contracts (structural)
+        run: python -m nexo_os data-contract-validate

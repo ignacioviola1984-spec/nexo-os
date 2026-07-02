@@ -3,7 +3,9 @@ JSON file (config/users.json). The first admin is provisioned once from .env via
 `python -m nexo_os bootstrap-admin` — the only allowed bootstrap; there is no
 anonymous fallback.
 
-Roles: 'admin' (sees all, manages users) and 'operador' (operates the inbox + views).
+Roles are defined canonically in `enterprise.rbac`: 'admin' (sees all, manages users),
+'operador' (operates the inbox + views), plus least-privilege 'auditor' (reads the
+audit trail + numbers) and 'viewer' (reads the numbers only).
 """
 
 from __future__ import annotations
@@ -14,13 +16,34 @@ from pathlib import Path
 import bcrypt
 
 from nexo_os.config import get_settings
+from nexo_os.enterprise.rbac import (
+    ROLE_ADMIN,
+    ROLE_AUDITOR,
+    ROLE_OPERADOR,
+    ROLE_VIEWER,
+    VALID_ROLES,
+)
 from nexo_os.logging_setup import get_logger
 
 log = get_logger("users")
 
-ROLE_ADMIN = "admin"
-ROLE_OPERADOR = "operador"
-VALID_ROLES = {ROLE_ADMIN, ROLE_OPERADOR}
+# Re-exported so existing imports (`user_store.ROLE_ADMIN`, etc.) keep working while
+# rbac.py remains the single source of truth for the role set.
+__all__ = [
+    "ROLE_ADMIN",
+    "ROLE_OPERADOR",
+    "ROLE_AUDITOR",
+    "ROLE_VIEWER",
+    "VALID_ROLES",
+    "hash_password",
+    "verify_password",
+    "load_users",
+    "save_users",
+    "add_user",
+    "get_role",
+    "to_authenticator_credentials",
+    "bootstrap_admin",
+]
 
 
 def hash_password(password: str) -> str:
