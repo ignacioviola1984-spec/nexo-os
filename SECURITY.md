@@ -8,8 +8,8 @@ the model, and the controls around it.
 
 | Data | Where it lives | Sensitivity |
 |---|---|---|
-| Domain data (clients, policies, installments, commissions, leads, quotes, claims) | **Synthetic** by default: local DuckDB (`nexo_os/data/synthetic/nexo.duckdb`). Production data source: BigQuery (configurable). | PII in `clientes`/`leads` (see DATA_MODEL.md) |
-| System data (`acciones`, `agent_runs`, `audit_log`) | Local DuckDB runtime store (`nexo_os/data/runtime/`, gitignored). Production: BigQuery. | Identifiers + decisions; no full PII |
+| Domain data (clients, policies, installments, commissions, leads, quotes, claims) | **Synthetic** by default: local DuckDB (`nexo_os/data/synthetic/nexo.duckdb`). Production data source is configurable: BigQuery, GCS, or Turso/libSQL. | PII in `clientes`/`leads` (see DATA_MODEL.md) |
+| System data (`acciones`, `agent_runs`, `audit_log`) | Local DuckDB runtime store (`nexo_os/data/runtime/`, gitignored). Production: BigQuery, or Turso/libSQL (full backend, or `NEXO_SYSTEM_STORE=turso` hybrid — the hash-chained `audit_log` is stored there). | Identifiers + decisions; no full PII |
 | User credentials | `config/users.json` (gitignored), bcrypt-hashed | Secret |
 | Secrets (API key, BQ creds, cookie key) | `.env` (gitignored) / environment | Secret |
 

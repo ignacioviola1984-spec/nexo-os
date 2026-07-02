@@ -34,4 +34,8 @@ Without `ANTHROPIC_API_KEY` the recommendations use the deterministic grounded t
 - The data source stays synthetic on the public demo (PII / client-confidentiality).
   The BigQuery path is not used here.
 - Streamlit Cloud's filesystem is ephemeral: approvals and the audit log persist for
-  the life of the container and reset on redeploy — appropriate for a demo.
+  the life of the container and reset on redeploy — appropriate for a demo. To persist
+  them across redeploys, set `NEXO_SYSTEM_STORE=turso` with `NEXO_TURSO_DATABASE_URL` +
+  `NEXO_TURSO_AUTH_TOKEN` (Settings → Secrets) and uncomment `libsql-client` in
+  `requirements.txt`: domain stays synthetic, but `acciones`/`agent_runs`/`audit_log`
+  live in hosted Turso. See [`TURSO.md`](TURSO.md).

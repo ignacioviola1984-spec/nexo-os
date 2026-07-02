@@ -44,6 +44,13 @@ interface; nothing else knows which backend is live:
 - **`gcs`** — cloud object storage: domain extracts as Parquet in a Google Cloud
   Storage bucket, loaded into a local store and served identically. Fails closed
   without bucket/credentials.
+- **`turso`** — hosted libSQL (SQLite-compatible). Money is stored exactly as TEXT
+  (never float), coerced back to `Decimal` on read. Fails closed without a database URL.
+
+Beyond a full data source, Turso can also serve **just the system tables**: set
+`NEXO_SYSTEM_STORE=turso` to keep domain reads on synthetic/BigQuery/GCS while
+persisting `acciones`, `agent_runs`, and the hash-chained `audit_log` in Turso — so
+approvals and the audit trail survive a restart (see [`docs/TURSO.md`](docs/TURSO.md)).
 
 So the demo here exercises the same code that runs in production. The real store,
 uploads, users, and audit log stay private (gitignored) for PII and
@@ -120,11 +127,13 @@ optional — every target maps 1:1 to `python -m nexo_os <command>`.
 | `eval` | Run the eval/guardrail harness (exits non-zero on failure) |
 | `lint` | ruff + black checks |
 | `bq-validate` | Validate a live BigQuery dataset vs the canonical DDL |
+| `turso-seed` | Load the synthetic dataset into the configured Turso database |
 
 ## Documentation
 
 - [`OPERATING-MODEL.md`](OPERATING-MODEL.md) — how it works; the determinism / HITL boundary.
 - [`nexo_os/data/schema/DATA_MODEL.md`](nexo_os/data/schema/DATA_MODEL.md) — canonical schema, grains, PII flags.
+- [`docs/TURSO.md`](docs/TURSO.md) — the Turso/libSQL backend (full + hybrid system store).
 - [`SECURITY.md`](SECURITY.md) — auth, PII handling, the disabled execution seam, audit chain.
 
 ## Language
