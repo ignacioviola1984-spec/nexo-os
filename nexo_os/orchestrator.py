@@ -25,6 +25,7 @@ from nexo_os.clock import now
 from nexo_os.config import Settings, get_settings
 from nexo_os.data.models import AgentRun, RunEstado
 from nexo_os.data.repository import NexoRepository
+from nexo_os.enterprise.observability import METRICS
 from nexo_os.logging_setup import bind_run_id, clear_run_context, get_logger
 from nexo_os.narrate import narrate
 from nexo_os.state import NexoContext
@@ -121,6 +122,8 @@ def run_cycle(
         estado = RunEstado.con_warnings if ctx.warnings else RunEstado.ok
     except Exception as exc:
         finalizado = now()
+        if settings.metrics_enabled:
+            METRICS.inc("nexo_agent_runs_total", estado="error")
         repo.update_agent_run(run_id, finalizado, RunEstado.error, json.dumps({"error": str(exc)}))
         audit.record(
             actor="system",
@@ -135,6 +138,12 @@ def run_cycle(
 
     finalizado = now()
     resumen = ctx.resumen()
+    if settings.metrics_enabled:
+        METRICS.inc("nexo_agent_runs_total", estado=estado.value)
+        METRICS.inc("nexo_acciones_total", value=float(len(ctx.acciones)))
+        METRICS.inc("nexo_reconciliation_breaks_total", value=float(len(ctx.warnings)))
+        freshness_h = (finalizado.date() - repo.snapshot_fecha).days * 24.0
+        METRICS.set_gauge("nexo_data_freshness_hours", freshness_h)
     repo.update_agent_run(run_id, finalizado, estado, json.dumps(resumen, ensure_ascii=False))
     audit.record(
         actor="system",

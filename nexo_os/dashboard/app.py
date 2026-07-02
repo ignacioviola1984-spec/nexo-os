@@ -19,6 +19,7 @@ from nexo_os.config import get_settings
 from nexo_os.dashboard import portfolio
 from nexo_os.data.factory import get_repository
 from nexo_os.data.models import AccionEstado, Prioridad
+from nexo_os.enterprise import rbac
 from nexo_os.i18n import AGENTES, NAV, SIN_DATOS, fmt_ars, fmt_pct
 from nexo_os.orchestrator import run_cycle
 from nexo_os.review import resolve_accion
@@ -180,12 +181,15 @@ def _view_agent(repo, results, agent_id: str) -> None:
         st.info("Sin hallazgos para este agente en esta corrida.")
 
 
-def _view_inbox(repo, username: str) -> None:
+def _view_inbox(repo, username: str, role: str) -> None:
     st.header(NAV["inbox"])
     st.caption(
         "La aprobación registra la decisión de forma inmutable. No envía ni ejecuta "
         "nada hacia sistemas externos en esta versión."
     )
+    can_resolve = rbac.has_permission(role, rbac.Permission.INBOX_RESOLVE)
+    if not can_resolve:
+        st.info("Tu rol tiene acceso de solo lectura al inbox (sin resolver acciones).")
     acciones = repo.get_acciones(estado=AccionEstado.propuesta)
     if not acciones:
         st.info("No hay acciones propuestas. Corré el análisis desde la barra lateral.")
@@ -206,22 +210,47 @@ def _view_inbox(repo, username: str) -> None:
             st.markdown(f"**Recomendación:** {a.mensaje_es or SIN_DATOS}")
             st.caption("Rationale determinista (las cifras):")
             st.json(a.rationale_json)
+            if not can_resolve:
+                continue
             nota = st.text_input("Nota del revisor (opcional)", key=f"nota_{a.accion_id}")
             editado = st.text_input(
                 "Mensaje editado (para 'Editar')", key=f"edit_{a.accion_id}", value=a.mensaje_es
             )
             b1, b2, b3 = st.columns(3)
             if b1.button("Aprobar", key=f"ap_{a.accion_id}"):
-                resolve_accion(repo, audit, a.accion_id, AccionEstado.aprobada, username, nota)
+                resolve_accion(
+                    repo,
+                    audit,
+                    a.accion_id,
+                    AccionEstado.aprobada,
+                    username,
+                    nota,
+                    revisor_role=role,
+                )
                 st.success("Aprobada y registrada.")
                 st.rerun()
             if b2.button("Rechazar", key=f"re_{a.accion_id}"):
-                resolve_accion(repo, audit, a.accion_id, AccionEstado.rechazada, username, nota)
+                resolve_accion(
+                    repo,
+                    audit,
+                    a.accion_id,
+                    AccionEstado.rechazada,
+                    username,
+                    nota,
+                    revisor_role=role,
+                )
                 st.warning("Rechazada y registrada.")
                 st.rerun()
             if b3.button("Editar", key=f"ed_{a.accion_id}"):
                 resolve_accion(
-                    repo, audit, a.accion_id, AccionEstado.editada, username, nota, editado
+                    repo,
+                    audit,
+                    a.accion_id,
+                    AccionEstado.editada,
+                    username,
+                    nota,
+                    editado,
+                    revisor_role=role,
                 )
                 st.info("Editada y registrada.")
                 st.rerun()
@@ -281,17 +310,19 @@ def main() -> None:
         st.divider()
         # CV/portfolio landing pages, only on the public demo.
         portfolio_options = ["Proyecto", "Sobre mí"] if settings.demo_mode else []
-        nav_options = (
-            portfolio_options
-            + [NAV["overview"]]
-            + [AGENTES[a] for a in AGENTES]
-            + [
-                NAV["inbox"],
-                NAV["audit"],
-            ]
-        )
+        # Navigation is gated by RBAC permissions (deny-by-default).
+        perms = rbac.permissions_for(role)
+        nav_options = list(portfolio_options)
+        if rbac.Permission.VIEW_DASHBOARD in perms:
+            nav_options.append(NAV["overview"])
+        if rbac.Permission.VIEW_METRICS in perms:
+            nav_options += [AGENTES[a] for a in AGENTES]
+        if rbac.Permission.INBOX_VIEW in perms:
+            nav_options.append(NAV["inbox"])
+        if rbac.Permission.VIEW_AUDIT in perms:
+            nav_options.append(NAV["audit"])
         # User management is a production-only admin view (hidden in the public demo).
-        if role == user_store.ROLE_ADMIN and not settings.demo_mode:
+        if rbac.Permission.MANAGE_USERS in perms and not settings.demo_mode:
             nav_options.append("Usuarios")
         choice = st.radio("Vista", nav_options, label_visibility="collapsed")
 
@@ -307,7 +338,7 @@ def main() -> None:
     elif choice in agent_by_name:
         _view_agent(repo, results, agent_by_name[choice])
     elif choice == NAV["inbox"]:
-        _view_inbox(repo, username)
+        _view_inbox(repo, username, role)
     elif choice == NAV["audit"]:
         _view_audit(repo)
     elif choice == "Usuarios":

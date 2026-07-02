@@ -1,0 +1,93 @@
+name: Deploy
+
+# Gated promotion pipeline: the CI gate (lint -> test -> eval), then the enterprise
+# security gates, then a release manifest, then an environment-scoped deploy. The deploy
+# job is a seam - the host command is deployment-specific and intentionally a no-op here.
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        type: choice
+        options: [staging, production]
+        default: staging
+  push:
+    tags: ["v*"]
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: pip install -e ".[dev]"
+      - name: Lint (ruff + black)
+        run: python -m nexo_os lint
+      - name: Seed synthetic data
+        run: python -m nexo_os seed
+      - name: Tests
+        run: python -m nexo_os test
+      - name: Eval gate (determinism / grounding / reconciliation)
+        run: python -m nexo_os eval
+
+  security-gate:
+    needs: gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NEXO_ENV: production
+      # A strong key so the production-tightened checks assess real posture, not the
+      # placeholder. Real deploys inject this from the platform secret store.
+      NEXO_AUTH_COOKIE_KEY: ${{ secrets.NEXO_AUTH_COOKIE_KEY || 'ci-only-strong-key-please-override-32ch' }}
+      NEXO_AUTH_COOKIE_KEY_ROTATED_ON: "2026-07-01"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: pip install -e ".[dev]"
+      - name: Security review (fails on HIGH/CRITICAL)
+        run: python -m nexo_os security-review
+      - name: SOC2-style control self-assessment (fails on any FAIL)
+        run: python -m nexo_os controls-check
+
+  manifest:
+    needs: security-gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: pip install -e ".[dev]"
+      - name: Write release manifest
+        env:
+          NEXO_GIT_SHA: ${{ github.sha }}
+        run: python -m nexo_os release-manifest --write release.json
+      - name: Upload manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-manifest
+          path: release.json
+
+  deploy:
+    needs: manifest
+    runs-on: ubuntu-latest
+    # GitHub Environments add required reviewers / protection rules for production.
+    environment: ${{ github.event.inputs.environment || 'staging' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy (seam)
+        run: |
+          echo "Deploy seam: wire the host command for ${{ github.event.inputs.environment || 'staging' }} here."
+          echo "Rollback is guarded by 'nexo rollback-check <previous-release.json>' (see docs/DEPLOYMENT.md)."
